@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shelved</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0..1,0&display=block" />
+<style>
+  :root{
+    --background:#F9F2E6;
+    --sand:#EEE0D1;
+    --blue:#CCD6FF;
+    --burgundy:#581000;
+    --dark-text:#3F1922;
+    --green:#71600F;
+    --mauve:#8E4B4F;
+    --orange:#F25801;
+    --purple:#D3B8E8;
+    --tan:#D1975C;
+    --text-alt:#765A5D;
+    --white:#FFFFFF;
+
+    --font-serif: 'Playfair Display', serif;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+
+    --side: 24px; /* standard page side padding, used only for text/header content */
+  }
+
+  .material-icon{
+    font-family:'Material Symbols Outlined';
+    font-weight:normal;
+    font-style:normal;
+    font-size:20px;
+    line-height:1;
+    letter-spacing:normal;
+    text-transform:none;
+    display:inline-block;
+    white-space:nowrap;
+    word-wrap:normal;
+    direction:ltr;
+    -webkit-font-feature-settings:'liga';
+    -webkit-font-smoothing:antialiased;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0; height:100%;}
+  body{
+    background:var(--background);
+    color:var(--dark-text);
+    font-family:var(--font-sans);
+    -webkit-font-smoothing:antialiased;
+    height:100vh;
+    overflow:hidden;
+    overscroll-behavior-y:none;
+  }
+
+  #app{
+    max-width:560px;
+    margin:0 auto;
+    height:100vh;
+    position:relative;
+    background:var(--background);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: max(28px, env(safe-area-inset-top)) var(--side) 18px;
+    gap:12px;
+    position:relative;
+  }
+  .circle-btn{
+    width:46px;height:46px;border-radius:50%;
+    border:1.5px solid var(--burgundy);
+    background:transparent;color:var(--burgundy);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0; cursor:pointer; font-size:16px;
+    font-family:var(--font-sans);
+  }
+  .circle-btn:active{ opacity:.6; }
+
+  .circle-btn-filled{
+    width:46px;height:46px;border-radius:50%;
+    border:none;
+    background:var(--dark-text);color:var(--white);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0; cursor:pointer; font-size:16px;
+    font-family:var(--font-sans);
+  }
+  .circle-btn-filled:active{ opacity:.6; }
+  .circle-btn-filled .material-icon{
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'opsz' 20, 'GRAD' 0;
+  }
+
+  .topbar-left{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .topbar .title-center{
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    white-space:nowrap;
+    font-family:var(--font-sans); font-size:15px; color:var(--dark-text);
+  }
+  .pill-btn{
+    background:var(--white);
+    border:none;
+    border-radius:999px;
+    padding:9px 20px;
+    font-family:var(--font-sans);
+    font-size:14px; font-weight:500;
+    color:var(--dark-text);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .pill-btn:active{opacity:.7;}
+
+  /* ---------- Home header ---------- */
+  .home-header{
+    padding: max(28px, env(safe-area-inset-top)) var(--side) 0;
+  }
+  .home-header-row{
+    display:flex; align-items:center; justify-content:space-between;
+    min-height:46px;
+  }
+  .home-header h1{
+    font-family:var(--font-sans);
+    font-weight:800;
+    font-size:16pt;
+    margin:0;
+    color:var(--dark-text);
+    line-height:1;
+  }
+  .tab-stack{
+    display:flex; flex-direction:column; align-items:flex-end;
+    margin-top:16px;
+    margin-right:6px;
+  }
+  .tab-stack button{
+    background:none;border:none;
+    font-family:var(--font-sans);
+    font-size:16pt;
+    font-weight:500;
+    line-height:20pt;
+    color: var(--dark-text);
+    opacity:.45;
+    cursor:pointer; padding:0;
+  }
+  .tab-stack button.active{ opacity:1; }
+
+  .home-divider{
+    margin-top:40px;
+    border-top:1px solid var(--dark-text);
+  }
+
+  /* ---------- Crumb header (shelf detail) ---------- */
+  .crumb-row{
+    padding: 16px var(--side) 16px;
+    border-top:1px solid var(--dark-text);
+    border-bottom:1px solid var(--dark-text);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .crumb-title{
+    font-family:var(--font-serif);
+    font-size:34px; font-weight:400;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    min-width:0;
+  }
+  .crumb-sub{ color:var(--text-alt); font-family:var(--font-sans); font-size:18px; font-weight:400;}
+  .count-badges{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
+  .badge{
+    width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-sans);
+    font-size:14px; font-weight:600;
+    line-height:1;
+    flex-shrink:0;
+  }
+  .badge.filled{ background:var(--green); color:var(--white); }
+  .badge.outline{ background:transparent; border:1.5px solid var(--green); color:var(--dark-text); }
+  .right-edit{
+    color:var(--text-alt); font-size:14px; font-weight:500; cursor:pointer; flex-shrink:0;
+  }
+
+  /* ---------- List area (edge to edge content) ---------- */
+  .list-area{
+    flex:1; overflow-y:auto; padding: 0 0 110px;
+  }
+  .list-area.with-side-pad{ padding-left:var(--side); padding-right:var(--side); }
+
+  /* simple text-link rows (cities) — styled to match the home nav items */
+  .simple-row{
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:var(--font-sans); font-size:16pt; line-height:24pt; font-weight:500;
+    opacity:1;
+    margin-bottom:4px;
+    padding:0 var(--side); cursor:pointer; color:var(--dark-text);
+  }
+
+  /* category rows (bold sans, Casual/Fancy/...) */
+  .cat-row{
+    font-family:var(--font-sans); font-size:19px; font-weight:500;
+    padding:11px var(--side); cursor:pointer; color:var(--dark-text);
+  }
+  .cat-row .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
+
+  /* item card -- edge to edge, fully rounded, small gap between */
+  .item-card{
+    background:var(--sand);
+    border-radius:30px;
+    padding:18px var(--side);
+    margin: 0 6px 8px 6px;
+  }
+  .item-card .name{ font-weight:700; font-size:17px; margin-bottom:4px;}
+  .item-card .loc{ font-size:14px; color:var(--text-alt); margin-bottom:2px;}
+  .item-card .note{ font-size:14px; color:var(--dark-text); margin-bottom:6px; }
+  .item-card .link{
+    font-size:13px; color:var(--text-alt); display:flex; gap:6px; align-items:center;
+    text-decoration:none; word-break:break-all;
+  }
+  .item-card.editing{ display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .item-card .edit-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .icon-btn{
+    width:32px;height:32px;border-radius:50%;border:1.5px solid var(--mauve);
+    background:transparent;color:var(--mauve);display:flex;align-items:center;justify-content:center;
+    cursor:pointer; font-size:14px;
+  }
+
+  /* shelf cards on home/favorites — full bleed, fully rounded (stadium), no gap-fill overlay on arrow */
+  .shelf-card{
+    border-radius:44px;
+    padding:16px var(--side);
+    margin: 0;
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer;
+    color:var(--dark-text);
+  }
+  .shelf-card h3{
+    font-family:var(--font-serif); font-size:28px; margin:0; font-weight:400;
+    display:flex; align-items:center; gap:10px;
+  }
+  .shelf-card .badges-inline{ display:flex; gap:8px; }
+  .shelf-card .arrow-circle{
+    width:46px;height:46px;border-radius:50%;
+    border:1.5px solid currentColor;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    background:transparent;
+    font-size:16px;
+  }
+
+  /* ---------- Build a shelf form (bottom sheet style panel) ---------- */
+  .sheet-panel{
+    background:var(--sand);
+    border-radius:34px 34px 0 0;
+    flex:1;
+    display:flex; flex-direction:column;
+    min-height:0;
+  }
+  .sheet-header-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px var(--side) 16px;
+    border-bottom:1px solid rgba(63,25,34,0.18);
+    flex-shrink:0;
+  }
+  .sheet-header-title{
+    font-family:var(--font-sans); font-weight:700; font-size:18px;
+    color:var(--dark-text);
+  }
+  .form-area{ padding:4px var(--side) 110px; flex:1; overflow-y:auto;}
+  .form-label{ font-size:16px; margin:22px 0 12px; color:var(--dark-text); }
+  .swatches{ display:flex; gap:10px; flex-wrap:wrap;}
+  .swatch{
+    width:28px;height:28px;border-radius:50%;
+    border:2.5px solid transparent; cursor:pointer;
+  }
+  .swatch.selected{ border-color: var(--dark-text); }
+
+  .custom-swatch{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    background:var(--white);
+  }
+  .custom-swatch .material-icon{
+    font-size:14px; color:var(--dark-text);
+    pointer-events:none;
+  }
+  .custom-swatch input[type="color"]{
+    position:absolute; top:0; left:0;
+    width:100%; height:100%;
+    opacity:0; cursor:pointer; border:none; padding:0;
+  }
+  .name-input{
+    width:calc(100% + var(--side) * 2);
+    margin-left:calc(var(--side) * -1);
+    margin-right:calc(var(--side) * -1);
+    border:none; outline:none;
+    border-radius:999px;
+    padding:18px 26px;
+    font-family:var(--font-serif); font-size:22px;
+  }
+  .name-input::placeholder{ color:currentColor; opacity:.45; }
+  .cat-input-row{ display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+  .cat-row-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .add-circle{
+    width:28px;height:28px;border-radius:50%;border:1.5px solid var(--burgundy);
+    color:var(--burgundy); background:transparent; display:flex;align-items:center;justify-content:center;
+    flex-shrink:0; cursor:pointer; font-size:15px; line-height:1; padding:0;
+  }
+  .cat-text-input{
+    flex:1; border:none; border-bottom:1.5px solid rgba(63,25,34,0.5);
+    background:transparent; font-family:var(--font-sans); font-size:16pt; font-weight:500;
+    line-height:24pt;
+    padding:0 0 4px; outline:none; color:var(--dark-text);
+  }
+  .cat-text-input::placeholder{ color:rgba(63,25,34,0.35); font-weight:500;}
+  .depth-hint{ font-size:13px; color:var(--text-alt); margin-top:6px; font-weight:400; }
+
+  /* floating round CTA bottom-right */
+  .bottom-cta{
+    position:absolute; right:var(--side); bottom: calc(18px + env(safe-area-inset-bottom));
+    width:46px;height:46px;border-radius:50%;
+    background:var(--burgundy); color:var(--white);
+    border:none; font-size:18px; cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .bottom-cta .material-icon{ font-size:20px; }
+
+  /* ---------- bottom search bar ---------- */
+  .bottom-bar{
+    position:absolute; left:0; right:0; bottom:0;
+    padding: 18px var(--side) calc(18px + env(safe-area-inset-bottom));
+    display:flex; gap:12px; align-items:center;
+    border-top:1px solid var(--dark-text);
+    background:var(--background);
+    z-index:5;
+  }
+  .search-input{
+    flex:1; border:none; outline:none;
+    background:var(--sand);
+    border-radius:999px;
+    padding:14px 22px;
+    font-family:var(--font-sans); font-size:15px;
+    color:var(--dark-text);
+  }
+  .search-input::placeholder{ color:rgba(63,25,34,0.45); }
+  .add-btn-circle{
+    width:46px;height:46px;border-radius:50%;
+    border:none; background:var(--dark-text);
+    color:var(--white); flex-shrink:0; cursor:pointer; font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .empty-state{
+    text-align:center; color:var(--text-alt); padding:60px var(--side); font-size:15px;
+  }
+
+  .hidden{ display:none !important; }
+
+  @keyframes slideUpSheet{
+    from{ transform: translateY(100%); }
+    to{ transform: translateY(0); }
+  }
+  @keyframes slideDownSheet{
+    from{ transform: translateY(0); }
+    to{ transform: translateY(100%); }
+  }
+  @keyframes rowSlideIn{
+    from{ transform: translateY(-10px); }
+    to{ transform: translateY(0); }
+  }
+  .rows-slide-container{
+    overflow:hidden;
+  }
+  .build-sheet-wrapper{
+    position:absolute; left:0; right:0; top:0; bottom:0;
+    display:flex; flex-direction:column;
+    z-index:10;
+  }
+  .build-sheet-wrapper.animate-in{
+    animation: slideUpSheet 0.55s ease;
+  }
+  .build-sheet-wrapper.animate-out{
+    animation: slideDownSheet 0.4s ease;
+    animation-fill-mode: forwards;
+  }
+  .sheet-fade{
+    flex-shrink:0;
+    background: linear-gradient(to bottom, rgba(249,242,230,0.2) 0%, var(--background) 100%);
+    pointer-events:none;
+  }
+  a{ color:inherit; }
+  ::-webkit-scrollbar{ display:none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =====================================================
+   MOCK DATA
+===================================================== */
+const COLORS = [
+  {key:'green', hex:'#71600F'},
+  {key:'blue', hex:'#CCD6FF'},
+  {key:'mauve', hex:'#8E4B4F'},
+  {key:'burgundy', hex:'#581000'},
+  {key:'tan', hex:'#D1975C'},
+  {key:'orange', hex:'#F25801'},
+  {key:'purple', hex:'#D3B8E8'},
+  {key:'dark', hex:'#3F1922'},
+];
+
+function hexToRgb(hex){
+  hex = hex.replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex,16);
+  return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+}
+
+function relativeLuminance(hex){
+  const {r,g,b} = hexToRgb(hex);
+  const [rs,gs,bs] = [r,g,b].map(v=>{
+    v/=255;
+    return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4);
+  });
+  return 0.2126*rs + 0.7152*gs + 0.0722*bs;
+}
+
+function contrastRatio(hex1, hex2){
+  const L1 = relativeLuminance(hex1);
+  const L2 = relativeLuminance(hex2);
+  const lighter = Math.max(L1,L2), darker = Math.min(L1,L2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+// Explicit overrides for specific brand colors where the contrast-winner
+// isn't the desired look (e.g. orange reads better with white text even
+// though dark text technically wins by a small WCAG margin).
+const TEXT_COLOR_OVERRIDES = {
+  '#F25801': '#FFFFFF', // Orange
+};
+
+function textColorFor(hex){
+  const upperHex = hex.toUpperCase();
+  if(TEXT_COLOR_OVERRIDES[upperHex]) return TEXT_COLOR_OVERRIDES[upperHex];
+
+  // Pick whichever of dark-text / white gives the higher contrast against this background.
+  const DARK = '#3F1922';
+  const WHITE = '#FFFFFF';
+  const contrastWithDark = contrastRatio(hex, DARK);
+  const contrastWithWhite = contrastRatio(hex, WHITE);
+  return contrastWithDark >= contrastWithWhite ? DARK : WHITE;
+}
+
+let DB = {
+  shelves: [
+    {
+      id:'restaurants', name:'Restaurants', color:'#71600F', favorite:true,
+      updated:'June 20, 2026',
+      nodes:[
+        { id:'kc', type:'group', name:'Kansas City', children:[
+          { id:'kc-casual', type:'group', name:'Casual', children:[
+            { id:1, type:'item', name:"LuLu's Thai Diner" },
+            { id:2, type:'item', name:'Beramee', location:'Crossroads', link:'https://www.barameethaibistro.com/' },
+            { id:3, type:'item', name:"Billie's Grocery", location:'Union Hill', note:'Best Cheddar Grits in town', link:'https://www.billiesgrocery.com/' },
+            { id:4, type:'item', name:"Mildred's" },
+            { id:5, type:'item', name:'Town Topic' },
+            { id:6, type:'item', name:'Hemma Hemma' },
+          ]},
+          { id:'kc-fancy', type:'group', name:'Fancy', children:[
+            { id:7, type:'item', name:'The Antler Room' },
+          ]},
+          { id:'kc-breakfast', type:'group', name:'Breakfast', children:[
+            { id:8, type:'item', name:'Story' },
+          ]},
+          { id:'kc-takeout', type:'group', name:'Takeout', children:[
+            { id:9, type:'item', name:'Pho Noodle Bar' },
+          ]},
+        ]},
+        { id:'boston', type:'group', name:'Boston', children:[
+          { id:'b-casual', type:'group', name:'Casual', children:[{id:10,type:'item',name:'Neptune Oyster'}] },
+        ]},
+        { id:'nyc', type:'group', name:'New York', children:[
+          { id:'ny-casual', type:'group', name:'Casual', children:[{id:11,type:'item',name:"Joe's Pizza"}] },
+        ]},
+        { id:'florence', type:'group', name:'Florence', children:[
+          { id:'fl-fancy', type:'group', name:'Fancy', children:[{id:12,type:'item',name:'Enoteca Pinchiorri'}] },
+        ]},
+        { id:'milwaukee', type:'group', name:'Milwaukee', children:[
+          { id:'mil-casual', type:'group', name:'Casual', children:[{id:13,type:'item',name:'Comet Cafe'}] },
+        ]},
+        { id:'stl', type:'group', name:'St. Louis', children:[
+          { id:'stl-casual', type:'group', name:'Casual', children:[{id:14,type:'item',name:'Pappy\'s Smokehouse'}] },
+        ]},
+      ]
+    },
+    {
+      id:'movies', name:'Movies', color:'#CCD6FF', favorite:true,
+      updated:'June 18, 2026',
+      nodes:[
+        { id:101, type:'item', name:'Paris, Texas', note:'Wim Wenders, 1984' },
+        { id:102, type:'item', name:'In the Mood for Love', note:'Wong Kar-wai' },
+        { id:103, type:'item', name:'Stalker' },
+        { id:104, type:'item', name:'The Tree of Life' },
+      ]
+    },
+    {
+      id:'our-story', name:'Our Story', color:'#8E4B4F', favorite:true,
+      updated:'June 12, 2026',
+      nodes:[
+        { id:201, type:'item', name:'How we met', note:'A coffee shop on 5th.' },
+        { id:202, type:'item', name:'First trip together', location:'Lisbon' },
+        { id:203, type:'item', name:'The proposal' },
+        { id:204, type:'item', name:'Moving in' },
+      ]
+    },
+    {
+      id:'museums', name:'Museums', color:'#581000', favorite:true,
+      updated:'June 10, 2026',
+      nodes:[
+        { id:'mus-art', type:'group', name:'Art', children:[{id:301,type:'item',name:'The Nelson-Atkins'}] },
+        { id:'mus-history', type:'group', name:'History', children:[{id:302,type:'item',name:'The National WWI Museum'}] },
+      ]
+    },
+    {
+      id:'travel-domestic', name:'Travel', color:'#D1975C', favorite:true,
+      updated:'June 9, 2026',
+      nodes:[
+        { id:401, type:'item', name:'Big Sur', location:'California' },
+        { id:402, type:'item', name:'Door County', location:'Wisconsin' },
+      ]
+    },
+    {
+      id:'travel-intl', name:'Travel', color:'#F25801', favorite:true,
+      updated:'June 8, 2026',
+      nodes:[
+        { id:501, type:'item', name:'Kyoto', location:'Japan' },
+        { id:502, type:'item', name:'Porto', location:'Portugal' },
+      ]
+    },
+    {
+      id:'tv', name:'TV Series', color:'#D3B8E8', favorite:true,
+      updated:'June 7, 2026',
+      nodes:[
+        { id:601, type:'item', name:'The Bear' },
+        { id:602, type:'item', name:'Severance' },
+      ]
+    },
+  ]
+};
+
+/* =====================================================
+   STATE / ROUTER
+===================================================== */
+let state = {
+  screen:'home',
+  homeTab:'favorites',
+  shelfId:null,
+  path:[],
+  editing:false,
+  search:'',
+  showBuildSheet:false,
+  buildJustOpened:false,
+  buildClosing:false,
+  buildDraft:{ colorIdx:0, customHex:'#A89F91', name:'', categories:[''] },
+};
+
+function go(screen, extra={}){
+  state = {...state, screen, editing:false, search:'', ...extra};
+  render();
+}
+
+/* =====================================================
+   HELPERS
+===================================================== */
+function findShelf(id){ return DB.shelves.find(s=>s.id===id); }
+
+function activeColorHex(d){
+  return d.colorIdx==='custom' ? d.customHex : COLORS[d.colorIdx].hex;
+}
+
+function resolvePath(shelf, path){
+  let nodes = shelf.nodes;
+  let trail = [];
+  for(const pid of path){
+    const found = nodes.find(n=>n.id===pid);
+    if(!found) break;
+    trail.push(found);
+    nodes = found.children || [];
+  }
+  return {nodes, trail};
+}
+
+function countAll(nodes){
+  let total = 0;
+  for(const n of nodes){
+    if(n.type==='item') total++;
+    else total += countAll(n.children||[]);
+  }
+  return total;
+}
+
+function directChildCount(nodes){ return nodes.length; }
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function formatShortDate(longStr){
+  const d = new Date(longStr);
+  if(isNaN(d.getTime())) return longStr;
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${mm} ${dd} ${yyyy}.`;
+}
+
+/* =====================================================
+   RENDER: HOME
+===================================================== */
+function renderHome(){
+  const tab = state.homeTab;
+  let shelves = DB.shelves;
+  if(tab==='favorites') shelves = shelves.filter(s=>s.favorite);
+  if(tab==='recents') shelves = [...shelves].sort((a,b)=> (a.updated<b.updated?1:-1)).slice(0,5);
+
+  let rows = shelves.map(s=>{
+    const nodes = s.nodes;
+    const direct = directChildCount(nodes);
+    const total = countAll(nodes);
+    const txt = textColorFor(s.color);
+    return `
+      <div class="shelf-card" style="background:${s.color}; color:${txt};" onclick="go('shelf',{shelfId:'${s.id}', path:[]})">
+        <h3>${escapeHtml(s.name)}
+          <span class="badges-inline">
+            <span class="badge filled" style="background:rgba(0,0,0,0.2); color:${txt};">${direct}</span>
+            <span class="badge outline" style="border-color:${txt}; color:${txt};">${total}</span>
+          </span>
+        </h3>
+        <div class="arrow-circle" style="color:${txt};"><span class="material-icon">arrow_forward</span></div>
+      </div>`;
+  }).join('') || `<div class="empty-state">No shelves yet. Tap + to build one.</div>`;
+
+  return `
+    <div class="home-header">
+      <div class="home-header-row">
+        <h1>Shelved</h1>
+        <button class="pill-btn">Edit</button>
+      </div>
+      <div class="tab-stack">
+        <button class="${tab==='favorites'?'active':''}" onclick="state.homeTab='favorites'; render()">Favorites</button>
+        <button class="${tab==='recents'?'active':''}" onclick="state.homeTab='recents'; render()">Recents</button>
+        <button class="${tab==='all'?'active':''}" onclick="state.homeTab='all'; render()">All</button>
+      </div>
+    </div>
+    <div class="home-divider"></div>
+    <div class="list-area" style="padding-top:18px;">${rows}</div>
+    <div class="bottom-bar">
+      <input class="search-input" placeholder="Search">
+      <button class="add-btn-circle" onclick="openBuildSheet()">+</button>
+    </div>
+  `;
+}
+
+/* =====================================================
+   BUILD A SHELF — overlay sheet (slides over home only)
+===================================================== */
+function openBuildSheet(){
+  state.showBuildSheet = true;
+  state.buildJustOpened = true;
+  state.buildClosing = false;
+  render();
+}
+
+function closeBuildSheet(){
+  state.buildClosing = true;
+  render();
+  setTimeout(()=>{
+    state.showBuildSheet = false;
+    state.buildClosing = false;
+    render();
+  }, 400);
+}
+
+function buildSheetInnerHtml(){
+  const d = state.buildDraft;
+  const isCustom = d.colorIdx === 'custom';
+  const activeHex = activeColorHex(d);
+
+  const swatches = COLORS.map((c,i)=>`
+    <div class="swatch ${i===d.colorIdx?'selected':''}" style="background:${c.hex}" onclick="state.buildDraft.colorIdx=${i}; render()"></div>
+  `).join('') + `
+    <label class="swatch custom-swatch ${isCustom?'selected':''}">
+      <span class="material-icon">colorize</span>
+      <input type="color" value="${d.customHex}"
+        oninput="state.buildDraft.customHex=this.value; state.buildDraft.colorIdx='custom'; render()">
+    </label>
+  `;
+
+  const catRows = d.categories.map((c,i)=>`
+    <div class="cat-input-row">
+      <input class="cat-text-input" placeholder="Category" value="${escapeHtml(c)}"
+        oninput="state.buildDraft.categories[${i}]=this.value">
+      <div class="cat-row-actions">
+        ${i>0 ? `<button class="add-circle" onclick="removeCategoryRow(${i})">−</button>` : ''}
+        <button class="add-circle" onclick="addCategoryRow(${i})">+</button>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="sheet-fade"></div>
+    <div class="sheet-panel">
+      <div class="sheet-header-row">
+        <div class="sheet-header-title">Build a Shelf</div>
+        <button class="circle-btn" onclick="closeBuildSheet()"><span class="material-icon">close</span></button>
+      </div>
+      <div class="form-area">
+        <div class="form-label">What color is your new shelf?</div>
+        <div class="swatches">${swatches}</div>
+
+        <div class="form-label">What is your shelf called?</div>
+        <input class="name-input" placeholder="Shelf Name" value="${escapeHtml(d.name)}"
+          oninput="state.buildDraft.name=this.value"
+          style="background:${activeHex}; color:${textColorFor(activeHex)};">
+
+        <div class="form-label">What categories would you like to add? <div class="depth-hint">Leave blank for a flat list of items.</div></div>
+        ${catRows}
+      </div>
+    </div>
+    <button class="bottom-cta" onclick="saveNewShelf()"><span class="material-icon">arrow_forward</span></button>
+  `;
+}
+
+function mountBuildSheet(){
+  const app = document.getElementById('app');
+  const wrapper = document.createElement('div');
+  wrapper.id = 'buildSheetWrapper';
+  wrapper.className = 'build-sheet-wrapper ' + (state.buildClosing ? 'animate-out' : (state.buildJustOpened ? 'animate-in' : ''));
+  wrapper.innerHTML = buildSheetInnerHtml();
+  app.appendChild(wrapper);
+
+  let offset = 0;
+  if(state.screen==='home'){
+    const header = app.querySelector('.home-header');
+    const divider = app.querySelector('.home-divider');
+    if(header) offset += header.getBoundingClientRect().height;
+    if(divider) offset += divider.getBoundingClientRect().height;
+  } else if(state.screen==='shelf'){
+    const topbar = app.querySelector('.topbar');
+    const crumb = app.querySelector('.crumb-row');
+    if(topbar) offset += topbar.getBoundingClientRect().height;
+    if(crumb) offset += crumb.getBoundingClientRect().height;
+  }
+
+  const fade = wrapper.querySelector('.sheet-fade');
+  if(fade) fade.style.height = offset + 'px';
+
+  state.buildJustOpened = false;
+}
+
+function addCategoryRow(i){
+  state.buildDraft.categories.push('');
+  render();
+}
+
+function removeCategoryRow(i){
+  state.buildDraft.categories.splice(i,1);
+  if(state.buildDraft.categories.length===0) state.buildDraft.categories.push('');
+  render();
+}
+
+function saveNewShelf(){
+  const d = state.buildDraft;
+  if(!d.name.trim()){ alert('Give your shelf a name first.'); return; }
+  const cats = d.categories.filter(c=>c.trim());
+  const nodes = cats.length
+    ? cats.map((c,i)=>({ id: 'g'+Date.now()+i, type:'group', name:c, children:[] }))
+    : [];
+  const id = 's'+Date.now();
+  DB.shelves.unshift({
+    id, name:d.name.trim(), color: activeColorHex(d), favorite:false,
+    updated: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+    nodes
+  });
+  state.buildDraft = { colorIdx:0, customHex:'#A89F91', name:'', categories:[''] };
+  state.showBuildSheet = false;
+  state.buildClosing = false;
+  state.buildJustOpened = false;
+  go('shelf',{shelfId:id, path:[]});
+}
+
+/* =====================================================
+   RENDER: SHELF DRILL-DOWN
+===================================================== */
+function renderShelf(){
+  const shelf = findShelf(state.shelfId);
+  if(!shelf) return renderHome();
+  const {nodes, trail} = resolvePath(shelf, state.path);
+  const atRoot = state.path.length===0;
+  const direct = directChildCount(shelf.nodes);
+  const total = countAll(shelf.nodes);
+  const parentCrumb = trail.length ? trail[trail.length-1].name : null;
+
+  const onBack = () => {
+    if(state.path.length===0){ go('home'); }
+    else { state.path.pop(); render(); }
+  };
+  window.__shelfBack = onBack;
+
+  const q = state.search.trim().toLowerCase();
+  const visibleNodes = q ? nodes.filter(n=> n.name.toLowerCase().includes(q)) : nodes;
+
+  let bodyHtml = '';
+  let listClass = 'list-area';
+  const isGroupLevel = nodes.length===0 || nodes[0].type==='group';
+  const justToggledEdit = !!state.editJustToggled;
+
+  if(isGroupLevel){
+    if(state.editing){
+      listClass += ' with-side-pad';
+      // editable rows: underline text input + minus/plus circles, matching Build a Shelf category editor
+      bodyHtml = nodes.map(n=>`
+        <div class="cat-input-row">
+          <input class="cat-text-input" placeholder="Category" value="${escapeHtml(n.name)}"
+            oninput="updateGroupName('${n.id}', this.value)">
+          <div class="cat-row-actions">
+            <button class="add-circle" onclick="deleteGroupRow('${n.id}')">−</button>
+            <button class="add-circle" onclick="addGroupRow()">+</button>
+          </div>
+        </div>
+      `).join('') + (nodes.length===0 ? `
+        <div class="cat-input-row">
+          <input class="cat-text-input" placeholder="Category" value="">
+          <div class="cat-row-actions">
+            <button class="add-circle" onclick="addGroupRow()">+</button>
+          </div>
+        </div>
+      ` : '');
+    } else if(visibleNodes.length===0){
+      bodyHtml = `<div class="empty-state">Nothing here yet.</div>`;
+    } else if(atRoot){
+      // root: simple serif rows (e.g. cities)
+      bodyHtml = visibleNodes.map(n=>`<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)}</div>`).join('');
+    } else {
+      // nested groups: bold sans rows (e.g. categories)
+      bodyHtml = visibleNodes.map(n=>{
+        const c = countAll(n.children||[]);
+        return `<div class="cat-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)} <span class="count">(${c})</span></div>`;
+      }).join('');
+    }
+  } else {
+    listClass += ' with-side-pad';
+    if(visibleNodes.length===0){
+      bodyHtml = `<div class="empty-state">Nothing here yet.</div>`;
+    } else {
+      bodyHtml = visibleNodes.map(n=>`
+        <div class="item-card ${state.editing?'editing':''}">
+          <div>
+            <div class="name">${escapeHtml(n.name)}</div>
+            ${n.location?`<div class="loc">${escapeHtml(n.location)}</div>`:''}
+            ${n.note?`<div class="note">${escapeHtml(n.note)}</div>`:''}
+            ${n.link?`<a class="link" href="${escapeHtml(n.link)}" target="_blank" onclick="event.stopPropagation()">🔗 ${escapeHtml(n.link)}</a>`:''}
+          </div>
+          ${state.editing?`<div class="edit-actions">
+            <button class="icon-btn" onclick="deleteItem('${n.id}')">✕</button>
+          </div>`:''}
+        </div>
+      `).join('');
+    }
+  }
+
+  return `
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="circle-btn-filled" onclick="go('home')"><span class="material-icon">home</span></button>
+        <button class="circle-btn" onclick="__shelfBack()"><span class="material-icon">arrow_back</span></button>
+      </div>
+      <!-- Date intentionally hidden from UI; shelf.updated is still stored and formatted via formatShortDate() if needed later -->
+      <span class="title-center hidden"></span>
+      <button class="pill-btn" onclick="state.editing=!state.editing; state.editJustToggled=true; render()">${state.editing?'Done':'Edit'}</button>
+    </div>
+    <div class="crumb-row">
+      <div class="crumb-title">
+        ${escapeHtml(shelf.name)}
+        ${parentCrumb?`<span class="crumb-sub">/ ${escapeHtml(parentCrumb)}</span>`:''}
+        <span class="count-badges">
+          <span class="badge filled">${direct}</span>
+          <span class="badge outline">${total}</span>
+        </span>
+      </div>
+      ${(!isGroupLevel && state.editing)?`<span class="right-edit" onclick="addGroupPrompt()">+ Add</span>`:''}
+    </div>
+    <div id="shelfListArea" class="${listClass}${justToggledEdit?' rows-slide-container':''}" style="padding-top:22px;">${bodyHtml}</div>
+    <div class="bottom-bar">
+      <input class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
+      <button class="add-btn-circle" onclick="openBuildSheet()">+</button>
+    </div>
+  `;
+}
+
+function drillInto(nodeId){
+  state.path.push(nodeId);
+  state.search='';
+  render();
+}
+
+function addGroupPrompt(){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const isItemLevel = nodes.length>0 && nodes[0].type==='item';
+  if(isItemLevel){
+    const name = prompt('Item name?');
+    if(!name) return;
+    const location = prompt('Location / area? (optional)')||'';
+    const note = prompt('Note? (optional)')||'';
+    const link = prompt('Link? (optional)')||'';
+    nodes.push({id:Date.now(), type:'item', name, location, note, link});
+  } else {
+    const name = prompt('New group / category name? (Leave blank to add an item instead)');
+    if(name){
+      nodes.push({id:'g'+Date.now(), type:'group', name, children:[]});
+    } else {
+      const itemName = prompt('Item name?');
+      if(!itemName) return;
+      nodes.push({id:Date.now(), type:'item', name:itemName});
+    }
+  }
+  render();
+}
+
+function deleteItem(id){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const idx = nodes.findIndex(n=>String(n.id)===String(id));
+  if(idx>-1) nodes.splice(idx,1);
+  render();
+}
+
+function updateGroupName(nodeId, value){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const node = nodes.find(n=>String(n.id)===String(nodeId));
+  if(node) node.name = value;
+  // intentionally no render() here so the input doesn't lose focus while typing
+}
+
+function addGroupRow(){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  nodes.push({ id:'g'+Date.now()+Math.random().toString(36).slice(2,6), type:'group', name:'', children:[] });
+  render();
+}
+
+function deleteGroupRow(nodeId){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const idx = nodes.findIndex(n=>String(n.id)===String(nodeId));
+  if(idx===-1) return;
+  const node = nodes[idx];
+  const childCount = (node.children||[]).length;
+  if(childCount>0){
+    const noun = childCount===1 ? 'item or subcategory' : 'items or subcategories';
+    const ok = confirm(`"${node.name||'This category'}" still has ${childCount} ${noun} inside. Deleting it will remove everything inside as well. Continue?`);
+    if(!ok) return;
+  }
+  nodes.splice(idx,1);
+  render();
+}
+
+/* =====================================================
+   MAIN RENDER
+===================================================== */
+function render(){
+  const app = document.getElementById('app');
+  let html = '';
+  if(state.screen==='home') html = renderHome();
+  else if(state.screen==='shelf') html = renderShelf();
+  app.innerHTML = html;
+
+  if(state.showBuildSheet || state.buildClosing){
+    mountBuildSheet();
+  }
+
+  if(state.editJustToggled){
+    state.editJustToggled = false;
+    const container = document.getElementById('shelfListArea');
+    if(container){
+      const targetHeight = container.scrollHeight;
+      container.style.height = '0px';
+      container.style.transition = 'none';
+      // force layout, then animate to full height on next frame
+      requestAnimationFrame(()=>{
+        container.style.transition = 'height 0.32s ease';
+        container.style.height = targetHeight + 'px';
+        setTimeout(()=>{
+          container.style.transition = '';
+          container.style.height = '';
+        }, 340);
+      });
+    }
+  }
+}
+
+render();
+</script>
+</body>
+</html>
