@@ -10,17 +10,17 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0..1,0&display=block" />
 <style>
   :root{
-    --background:#F9F2E6;
-    --sand:#EEE0D1;
+    --background:#F8EFE0;
+    --sand:#E8D9C9;
     --blue:#CCD6FF;
     --burgundy:#581000;
-    --dark-text:#3F1922;
+    --dark-text:#100507;
     --green:#71600F;
     --mauve:#8E4B4F;
     --orange:#F25801;
     --purple:#D3B8E8;
     --tan:#D1975C;
-    --text-alt:#765A5D;
+    --text-alt:#846A6D;
     --white:#FFFFFF;
 
     --font-serif: 'Playfair Display', serif;
@@ -151,11 +151,10 @@
     font-size:16pt;
     font-weight:500;
     line-height:20pt;
-    color: var(--dark-text);
-    opacity:.45;
+    color: var(--text-alt);
     cursor:pointer; padding:0;
   }
-  .tab-stack button.active{ opacity:1; }
+  .tab-stack button.active{ color: var(--dark-text); }
 
   .home-divider{
     margin-top:33px;
@@ -197,6 +196,7 @@
   }
   .badge.filled{ background:var(--green); color:var(--white); }
   .badge.outline{ background:transparent; border:1.5px solid var(--green); color:var(--dark-text); }
+  .badge.lock-badge .material-icon{ font-size:20px; }
   .right-edit{
     color:var(--text-alt); font-size:14px; font-weight:500; cursor:pointer; flex-shrink:0;
   }
@@ -204,6 +204,8 @@
   /* ---------- List area (edge to edge content) ---------- */
   .list-area{
     flex:1; overflow-y:auto; padding: 0 0 110px;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
   }
   .list-area.with-side-pad{ padding-left:var(--side); padding-right:var(--side); }
 
@@ -224,17 +226,71 @@
   .cat-row .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
 
   /* item card -- edge to edge, fully rounded, small gap between */
+  .add-item-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--white);
+    border:none;
+    border-radius:999px;
+    padding:18px var(--side);
+    margin: 0 0 8px 0;
+    cursor:pointer;
+    color:var(--text-alt);
+    font-family:var(--font-sans); font-size:17px; font-weight:600;
+  }
+  .add-circle-outline{
+    width:24px;height:24px;border-radius:50%;
+    border:1.5px solid var(--text-alt); background:transparent;
+    color:var(--text-alt); display:flex;align-items:center;justify-content:center;
+    flex-shrink:0; cursor:pointer; font-size:14px;
+  }
+
   .item-card{
     background:var(--sand);
     border-radius:30px;
     padding:18px var(--side);
     margin: 0 0 8px 0;
   }
+  .item-card.editing-fields{ padding:18px var(--side); }
+  .item-edit-top{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+    margin-bottom:14px;
+  }
+  .item-name-input{
+    flex:1; border:none; border-bottom:1.5px solid rgba(16,5,7,0.5);
+    background:transparent; color:var(--dark-text); outline:none;
+    font-family:var(--font-sans); font-size:17px; font-weight:700; line-height:20px;
+    padding:0 0 4px;
+  }
+  .item-name-input:empty:before{
+    content: attr(data-placeholder);
+    color:var(--text-alt); font-weight:700;
+  }
+  .item-note-input{
+    font-family:var(--font-sans); font-size:14px; font-weight:500; color:var(--dark-text);
+    line-height:17pt;
+    outline:none; white-space:pre-wrap; word-break:break-word;
+    margin-bottom:10px; min-height:18px;
+  }
+  .item-note-input:empty:before{
+    content: attr(data-placeholder);
+    color:var(--text-alt);
+  }
+  .item-link-row{
+    display:flex; align-items:center; gap:6px;
+  }
+  .item-link-row .link-icon{ font-size:15px; color:var(--text-alt); flex-shrink:0; }
+  .item-link-input{
+    font-family:var(--font-sans); font-size:13px; font-weight:500; color:var(--text-alt);
+    outline:none; flex:1; white-space:nowrap; overflow:hidden;
+  }
+  .item-link-input:empty:before{
+    content: attr(data-placeholder);
+    color:var(--text-alt);
+  }
   .item-card .name{ font-weight:700; font-size:17px; margin-bottom:4px;}
-  .item-card .loc{ font-size:14px; color:var(--dark-text); margin-bottom:2px;}
-  .item-card .note{ font-size:14px; color:var(--dark-text); margin-bottom:6px; }
+  .item-card .note{ font-size:14px; font-weight:500; color:var(--dark-text); margin-bottom:6px; white-space:pre-wrap; line-height:17pt; }
   .item-card .link{
-    font-size:13px; color:var(--text-alt); display:flex; gap:6px; align-items:center;
+    font-size:13px; font-weight:500; color:var(--text-alt); display:flex; gap:6px; align-items:center;
     text-decoration:none; word-break:break-all;
   }
   .item-card .link .link-icon{ font-size:15px; flex-shrink:0; }
@@ -271,16 +327,23 @@
 
   /* ---------- Build a shelf form (bottom sheet style panel) ---------- */
   .sheet-panel{
-    background:var(--sand);
+    background:var(--white);
     border-radius:34px 34px 0 0;
     flex:1;
     display:flex; flex-direction:column;
     min-height:0;
+    position:relative;
+  }
+  .form-bottom-fade{
+    position:absolute; left:0; right:0; bottom:0;
+    height:calc(124px + env(safe-area-inset-bottom));
+    background:linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 52%, rgba(255,255,255,1) 100%);
+    pointer-events:none;
   }
   .sheet-header-row{
     display:flex; align-items:center; justify-content:space-between;
     padding:22px var(--side) 16px;
-    border-bottom:1px solid rgba(63,25,34,0.18);
+    border-bottom:1px solid rgba(16,5,7,0.18);
     flex-shrink:0;
   }
   .sheet-header-title{
@@ -288,8 +351,23 @@
     color:var(--dark-text);
   }
   .form-area{ padding:4px var(--side) 110px; flex:1; overflow-y:auto;}
-  .form-label{ font-size:16px; margin:22px 0 12px; color:var(--dark-text); }
+  .form-label{ font-size:16px; margin:34px 0 12px; color:var(--dark-text); }
   .swatches{ display:flex; gap:10px; flex-wrap:wrap;}
+  .privacy-toggle{ display:flex; gap:10px; }
+  .privacy-btn{
+    border-radius:999px;
+    padding:10px 22px;
+    font-family:var(--font-sans); font-size:15px; font-weight:600;
+    cursor:pointer;
+    background:transparent;
+    border:1.5px solid var(--text-alt);
+    color:var(--text-alt);
+  }
+  .privacy-btn.selected{
+    background:var(--dark-text);
+    border-color:var(--dark-text);
+    color:var(--white);
+  }
   .swatch{
     width:28px;height:28px;border-radius:50%;
     border:2.5px solid transparent; cursor:pointer;
@@ -323,14 +401,14 @@
   .name-input::placeholder{ color:currentColor; opacity:.45; }
   .cat-input-row{ display:flex; align-items:flex-end; gap:10px; margin-bottom:0;}
   .cat-input-row.sub-level{ margin-bottom:0; }
-  .cat-row-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .cat-row-actions{ display:flex; gap:6px; flex-shrink:0; }
   .add-circle{
-    width:28px;height:28px;border-radius:50%;border:1.5px solid var(--burgundy);
+    width:24px;height:24px;border-radius:50%;border:1.5px solid var(--burgundy);
     color:var(--burgundy); background:transparent; display:flex;align-items:center;justify-content:center;
-    flex-shrink:0; cursor:pointer; font-size:15px; line-height:1; padding:0;
+    flex-shrink:0; cursor:pointer; font-size:14px; line-height:1; padding:0;
   }
   .cat-text-input{
-    flex:1; border:none; border-bottom:1.5px solid rgba(63,25,34,0.5);
+    flex:1; border:none; border-bottom:1.5px solid rgba(16,5,7,0.5);
     background:transparent; font-family:var(--font-sans); font-size:16pt; font-weight:500;
     line-height:24pt;
     padding:0 0 2.5px;
@@ -339,7 +417,7 @@
   }
   .cat-text-input:empty:before{
     content: attr(data-placeholder);
-    color:rgba(63,25,34,0.35); font-weight:500;
+    color:var(--text-alt); font-weight:500;
   }
   .cat-text-input.sub-level{
     font-size:19px;
@@ -352,9 +430,10 @@
   .bottom-cta{
     position:absolute; right:var(--side); bottom: calc(18px + env(safe-area-inset-bottom));
     width:46px;height:46px;border-radius:50%;
-    background:var(--burgundy); color:var(--white);
+    background:var(--dark-text); color:var(--white);
     border:none; font-size:18px; cursor:pointer;
     display:flex;align-items:center;justify-content:center;
+    z-index:2;
   }
   .bottom-cta .material-icon{ font-size:20px; }
 
@@ -372,16 +451,31 @@
     background:var(--sand);
     border-radius:999px;
     padding:14px 22px;
-    font-family:var(--font-sans); font-size:15px;
+    font-family:var(--font-sans); font-size:15px; font-weight:500;
     color:var(--dark-text);
   }
-  .search-input::placeholder{ color:rgba(63,25,34,0.45); }
+  .search-input::placeholder{ color:var(--text-alt); }
   .add-btn-circle{
     width:46px;height:46px;border-radius:50%;
     border:none; background:var(--dark-text);
     color:var(--white); flex-shrink:0; cursor:pointer; font-size:18px;
     display:flex;align-items:center;justify-content:center;
   }
+
+  .search-result-row{
+    background:var(--sand);
+    border-radius:24px;
+    padding:14px var(--side);
+    margin:0 0 8px 0;
+    cursor:pointer;
+  }
+  .search-result-crumb{
+    font-size:14px; font-weight:500; color:var(--text-alt); margin-bottom:2px;
+  }
+  .search-result-name{
+    font-family:var(--font-sans); font-size:17px; font-weight:700; color:var(--dark-text);
+  }
+  .search-result-name .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
 
   .empty-state{
     text-align:center; color:var(--text-alt); padding:60px var(--side); font-size:15px;
@@ -418,14 +512,92 @@
   }
   .sheet-fade{
     flex-shrink:0;
-    background: linear-gradient(to bottom, rgba(249,242,230,0.2) 0%, var(--background) 100%);
+    background: linear-gradient(to bottom, rgba(248,239,224,0.2) 0%, var(--background) 100%);
     pointer-events:none;
   }
   a{ color:inherit; }
   ::-webkit-scrollbar{ display:none; }
+
+  .password-gate{
+    position:fixed; inset:0;
+    background:var(--background);
+    z-index:1000;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .password-gate-card{
+    width:100%; max-width:340px;
+    display:flex; flex-direction:column; align-items:center;
+    gap:18px;
+  }
+  .password-gate-logo svg{ height:22px; width:auto; fill:var(--dark-text); }
+  .password-gate-label{
+    font-family:var(--font-sans); font-size:15px; font-weight:500;
+    color:var(--text-alt); text-align:center;
+  }
+  .password-gate-input{
+    width:100%; border:none; outline:none;
+    background:var(--sand);
+    border-radius:999px;
+    padding:16px 22px;
+    font-family:var(--font-sans); font-size:16px; font-weight:500;
+    color:var(--dark-text);
+    text-align:center;
+  }
+  .password-gate-input::placeholder{ color:var(--text-alt); }
+  .password-gate-error{
+    font-family:var(--font-sans); font-size:13px; font-weight:500;
+    color:var(--orange); text-align:center; margin-top:-8px;
+  }
+  .password-gate-btn{
+    width:100%; border:none; cursor:pointer;
+    background:var(--dark-text); color:var(--white);
+    border-radius:999px;
+    padding:16px 22px;
+    font-family:var(--font-sans); font-size:16px; font-weight:600;
+  }
+  .password-gate-cancel{
+    width:100%; border:none; cursor:pointer; background:transparent;
+    color:var(--text-alt); font-family:var(--font-sans); font-size:14px; font-weight:500;
+    padding:4px;
+  }
+  .password-gate-btn:active{ opacity:.8; }
+  .password-gate.hidden{ display:none; }
 </style>
 </head>
 <body>
+<div id="passwordGate" class="password-gate">
+  <div class="password-gate-card">
+    <div class="password-gate-logo"><svg viewBox="0 0 106.44 19" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7.22.29c3.82,0,6.22,2.11,6.22,5.47h-3.86c0-1.25-.94-2.02-2.4-2.02-1.58,0-2.59.72-2.59,1.9,0,1.08.55,1.61,1.8,1.87l2.66.55c3.17.65,4.68,2.16,4.68,4.97,0,3.43-2.69,5.67-6.77,5.67S.42,16.57.42,13.23h3.86c0,1.3.96,2.02,2.69,2.02s2.86-.7,2.86-1.82c0-.98-.46-1.49-1.63-1.73l-2.71-.55c-3.17-.65-4.8-2.45-4.8-5.35,0-3.22,2.71-5.51,6.53-5.51Z"/>
+      <path d="M15.83,18.39V.29h3.72v7.34c.74-1.03,2.11-1.63,3.67-1.63,2.86,0,4.51,1.82,4.51,4.97v7.42h-3.7v-6.53c0-1.51-.84-2.5-2.11-2.5-1.46,0-2.4.96-2.4,2.45v6.58h-3.7.01Z"/>
+      <path d="M29.73,12.37c0-3.74,2.52-6.36,6.14-6.36s6.12,2.47,6.12,6.38v.94l-8.71.05c.22,1.58,1.1,2.33,2.74,2.33,1.39,0,2.38-.5,2.64-1.37h3.38c-.43,2.66-2.81,4.37-6.1,4.37-3.62,0-6.22-2.64-6.22-6.34h0ZM33.33,11.1h4.99c0-1.27-.94-2.09-2.42-2.09s-2.28.65-2.57,2.09Z"/>
+      <path d="M44.18,18.39V.29h3.7v18.1s-3.7,0-3.7,0Z"/>
+      <path d="M49.38,6.39h3.98l1.46,4.2c.6,1.75,1.08,3.26,1.18,3.82.14-.7.67-2.26,1.27-3.82l1.61-4.2h3.84l-5.02,12h-3.65l-4.68-12h.01Z"/>
+      <path d="M63.59,12.37c0-3.74,2.52-6.36,6.14-6.36s6.12,2.47,6.12,6.38v.94l-8.71.05c.22,1.58,1.1,2.33,2.74,2.33,1.39,0,2.38-.5,2.64-1.37h3.38c-.43,2.66-2.81,4.37-6.1,4.37-3.62,0-6.22-2.64-6.22-6.34h0ZM67.19,11.1h4.99c0-1.27-.94-2.09-2.42-2.09s-2.28.65-2.57,2.09Z"/>
+      <path d="M77.39,12.46c0-3.82,2.28-6.46,5.93-6.46,1.49,0,2.9.6,3.6,1.49V.29h3.7v18.1h-3.48l-.19-1.54c-.65,1.1-2.14,1.85-3.86,1.85-3.46,0-5.69-2.45-5.69-6.24h0ZM86.9,12.32c0-1.8-1.2-3-2.93-3s-2.86,1.22-2.86,3,1.1,3,2.86,3,2.93-1.2,2.93-3Z"/>
+      <g>
+        <path d="M99.55,5.59l-1.01-.22c-.55-.12-.66-.36-.66-.69,0-.44.38-.72.99-.72.56,0,.89.27.91.73v.15h1.44v-.16c-.04-1.19-.89-1.98-2.18-2.03h-.16c-1.44-.01-2.45.84-2.45,2.06,0,1.05.62,1.75,1.79,2.01l1.03.23c.55.13.63.39.63.65,0,.43-.42.71-1.07.71-.3,0-1.01-.07-1.01-.72v-.16h-1.44v.16c.04,1.26.98,2.04,2.47,2.04s2.51-.86,2.51-2.13c0-1.03-.58-1.66-1.77-1.92Z"/>
+        <path d="M98.86.17c-3.39,0-6.04,2.63-6.04,5.98s2.6,5.98,6.04,5.98,5.98-2.57,5.98-5.98S102.27.17,98.86.17ZM98.86,10.71c-2.63,0-4.54-1.92-4.54-4.56s1.95-4.56,4.54-4.56,4.48,1.92,4.48,4.56-1.88,4.56-4.48,4.56Z"/>
+      </g>
+    </svg></div>
+    <input id="passwordInput" class="password-gate-input" type="password" placeholder="Password" autocomplete="off"
+      onkeydown="if(event.key==='Enter'){checkSitePassword();}">
+    <div id="passwordGateError" class="password-gate-error hidden">Incorrect password. Try again.</div>
+    <button class="password-gate-btn" onclick="checkSitePassword()">Enter</button>
+  </div>
+</div>
+<div id="privateGate" class="password-gate" style="display:none; z-index:1100;">
+  <div class="password-gate-card">
+    <span class="material-icon" style="font-size:32px; color:var(--dark-text); font-variation-settings:'FILL' 1;">lock</span>
+    <div class="password-gate-label">This shelf is private</div>
+    <input id="privateGateInput" class="password-gate-input" type="password" placeholder="Password" autocomplete="off"
+      onkeydown="if(event.key==='Enter'){checkPrivateShelfPassword();}">
+    <div id="privateGateError" class="password-gate-error hidden">Incorrect password. Try again.</div>
+    <button class="password-gate-btn" onclick="checkPrivateShelfPassword()">Unlock</button>
+    <button class="password-gate-cancel" onclick="closePrivateGate()">Cancel</button>
+  </div>
+</div>
 <div id="app"></div>
 
 <script>
@@ -440,7 +612,7 @@ const COLORS = [
   {key:'tan', hex:'#D1975C'},
   {key:'orange', hex:'#F25801'},
   {key:'purple', hex:'#D3B8E8'},
-  {key:'dark', hex:'#3F1922'},
+  {key:'dark', hex:'#100507'},
 ];
 
 function hexToRgb(hex){
@@ -478,7 +650,7 @@ function textColorFor(hex){
   if(TEXT_COLOR_OVERRIDES[upperHex]) return TEXT_COLOR_OVERRIDES[upperHex];
 
   // Pick whichever of dark-text / white gives the higher contrast against this background.
-  const DARK = '#3F1922';
+  const DARK = '#100507';
   const WHITE = '#FFFFFF';
   const contrastWithDark = contrastRatio(hex, DARK);
   const contrastWithWhite = contrastRatio(hex, WHITE);
@@ -494,8 +666,8 @@ let DB = {
         { id:'kc', type:'group', name:'Kansas City', children:[
           { id:'kc-casual', type:'group', name:'Casual', children:[
             { id:1, type:'item', name:"LuLu's Thai Diner" },
-            { id:2, type:'item', name:'Beramee', location:'Crossroads', link:'https://www.barameethaibistro.com/' },
-            { id:3, type:'item', name:"Billie's Grocery", location:'Union Hill', note:'Best Cheddar Grits in town', link:'https://www.billiesgrocery.com/' },
+            { id:2, type:'item', name:'Beramee', note:'Crossroads', link:'https://www.barameethaibistro.com/' },
+            { id:3, type:'item', name:"Billie's Grocery", note:'Union Hill\nBest Cheddar Grits in town', link:'https://www.billiesgrocery.com/' },
             { id:4, type:'item', name:"Mildred's" },
             { id:5, type:'item', name:'Town Topic' },
             { id:6, type:'item', name:'Hemma Hemma' },
@@ -542,7 +714,7 @@ let DB = {
       updated:'June 12, 2026',
       nodes:[
         { id:201, type:'item', name:'How we met', note:'A coffee shop on 5th.' },
-        { id:202, type:'item', name:'First trip together', location:'Lisbon' },
+        { id:202, type:'item', name:'First trip together', note:'Lisbon' },
         { id:203, type:'item', name:'The proposal' },
         { id:204, type:'item', name:'Moving in' },
       ]
@@ -559,16 +731,16 @@ let DB = {
       id:'travel-domestic', name:'Travel', color:'#D1975C', favorite:true,
       updated:'June 9, 2026',
       nodes:[
-        { id:401, type:'item', name:'Big Sur', location:'California' },
-        { id:402, type:'item', name:'Door County', location:'Wisconsin' },
+        { id:401, type:'item', name:'Big Sur', note:'California' },
+        { id:402, type:'item', name:'Door County', note:'Wisconsin' },
       ]
     },
     {
       id:'travel-intl', name:'Travel', color:'#F25801', favorite:true,
       updated:'June 8, 2026',
       nodes:[
-        { id:501, type:'item', name:'Kyoto', location:'Japan' },
-        { id:502, type:'item', name:'Porto', location:'Portugal' },
+        { id:501, type:'item', name:'Kyoto', note:'Japan' },
+        { id:502, type:'item', name:'Porto', note:'Portugal' },
       ]
     },
     {
@@ -595,12 +767,51 @@ let state = {
   showBuildSheet:false,
   buildJustOpened:false,
   buildClosing:false,
-  buildDraft:{ colorIdx:0, customHex:'#A89F91', name:'', categories:[''] },
+  buildDraft:{ colorIdx:0, customHex:'#A89F91', name:'', isPrivate:false, categories:[''] },
+  unlockedPrivateShelves: new Set(),
+  pendingPrivateShelfId: null,
 };
 
 function go(screen, extra={}){
   state = {...state, screen, editing:false, search:'', ...extra};
   render();
+}
+
+function openShelf(shelfId, path=[]){
+  const shelf = findShelf(shelfId);
+  if(shelf && shelf.private && !state.unlockedPrivateShelves.has(shelfId)){
+    state.pendingPrivateShelfId = shelfId;
+    state.pendingPrivateShelfPath = path;
+    document.getElementById('privateGateError').classList.add('hidden');
+    document.getElementById('privateGateInput').value = '';
+    document.getElementById('privateGate').style.display = 'flex';
+    setTimeout(()=>document.getElementById('privateGateInput').focus(), 50);
+    return;
+  }
+  go('shelf', {shelfId, path});
+}
+
+function checkPrivateShelfPassword(){
+  const input = document.getElementById('privateGateInput');
+  const errorEl = document.getElementById('privateGateError');
+  if(input.value === PRIVATE_SHELF_PASSWORD){
+    state.unlockedPrivateShelves.add(state.pendingPrivateShelfId);
+    const shelfId = state.pendingPrivateShelfId;
+    const path = state.pendingPrivateShelfPath || [];
+    state.pendingPrivateShelfId = null;
+    state.pendingPrivateShelfPath = null;
+    document.getElementById('privateGate').style.display = 'none';
+    go('shelf', {shelfId, path});
+  } else {
+    errorEl.classList.remove('hidden');
+    input.value = '';
+    input.focus();
+  }
+}
+
+function closePrivateGate(){
+  state.pendingPrivateShelfId = null;
+  document.getElementById('privateGate').style.display = 'none';
 }
 
 /* =====================================================
@@ -624,6 +835,32 @@ function resolvePath(shelf, path){
   return {nodes, trail};
 }
 
+function searchTree(nodes, query, trailNames=[], trailIds=[]){
+  let results = [];
+  for(const n of nodes){
+    const nameMatch = n.name && n.name.toLowerCase().includes(query);
+    const noteMatch = n.type==='item' && n.note && n.note.toLowerCase().includes(query);
+    const linkMatch = n.type==='item' && n.link && n.link.toLowerCase().includes(query);
+    if(nameMatch || noteMatch || linkMatch){
+      results.push({node:n, trailNames, trailIds});
+    }
+    if(n.type==='group' && n.children && n.children.length){
+      results = results.concat(searchTree(n.children, query, [...trailNames, n.name], [...trailIds, n.id]));
+    }
+  }
+  return results;
+}
+
+function goToSearchResult(pathIds){
+  state.path = pathIds;
+  state.search = '';
+  render();
+}
+
+function goToHomeSearchResult(shelfId, pathIds){
+  openShelf(shelfId, pathIds);
+}
+
 function countAll(nodes){
   let total = 0;
   for(const n of nodes){
@@ -637,6 +874,10 @@ function directChildCount(nodes){ return nodes.length; }
 
 function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function jsArrayLiteral(arr){
+  return '[' + arr.map(v => typeof v==='string' ? `'${String(v).replace(/'/g,"\\'")}'` : v).join(',') + ']';
 }
 
 function formatShortDate(longStr){
@@ -653,26 +894,56 @@ function formatShortDate(longStr){
 ===================================================== */
 function renderHome(){
   const tab = state.homeTab;
-  let shelves = DB.shelves;
-  if(tab==='favorites') shelves = shelves.filter(s=>s.favorite);
-  if(tab==='recents') shelves = [...shelves].sort((a,b)=> (a.updated<b.updated?1:-1)).slice(0,5);
+  const homeQuery = state.search.trim().toLowerCase();
 
-  let rows = shelves.map(s=>{
-    const nodes = s.nodes;
-    const direct = directChildCount(nodes);
-    const total = countAll(nodes);
-    const txt = textColorFor(s.color);
-    return `
-      <div class="shelf-card" style="background:${s.color}; color:${txt};" onclick="go('shelf',{shelfId:'${s.id}', path:[]})">
-        <h3>${escapeHtml(s.name)}
-          <span class="badges-inline">
-            <span class="badge filled" style="background:rgba(0,0,0,0.2); color:${txt};">${direct}</span>
-            <span class="badge outline" style="border-color:${txt}; color:${txt};">${total}</span>
-          </span>
-        </h3>
-        <div class="arrow-circle" style="color:${txt};"><span class="material-icon">arrow_forward</span></div>
-      </div>`;
-  }).join('') || `<div class="empty-state">No shelves yet. Tap + to build one.</div>`;
+  let rows;
+  if(homeQuery){
+    // Global search across every shelf, showing individual matches (items or
+    // categories/groups) with a full breadcrumb, rather than just shelf cards.
+    let results = [];
+    DB.shelves.forEach(s=>{
+      if(s.name.toLowerCase().includes(homeQuery)){
+        results.push({ shelf:s, node:{name:s.name, type:'shelf'}, trailNames:[], trailIds:[] });
+      }
+      searchTree(s.nodes, homeQuery).forEach(r=>{
+        results.push({ shelf:s, node:r.node, trailNames:r.trailNames, trailIds:r.trailIds });
+      });
+    });
+
+    rows = results.map(r=>{
+      const crumbParts = [r.shelf.name, ...r.trailNames];
+      const crumb = r.node.type!=='shelf' ? crumbParts.join(' / ') : '';
+      const targetPath = r.node.type==='group' ? r.trailIds.concat(r.node.id) : r.trailIds;
+      return `
+        <div class="search-result-row" onclick="goToHomeSearchResult('${r.shelf.id}', ${jsArrayLiteral(targetPath)})">
+          ${crumb?`<div class="search-result-crumb">${escapeHtml(crumb)}</div>`:''}
+          <div class="search-result-name">${escapeHtml(r.node.name)}</div>
+        </div>`;
+    }).join('') || `<div class="empty-state">No results for "${escapeHtml(state.search.trim())}"</div>`;
+  } else {
+    let shelves = DB.shelves;
+    if(tab==='favorites') shelves = shelves.filter(s=>s.favorite);
+    if(tab==='recents') shelves = [...shelves].sort((a,b)=> (a.updated<b.updated?1:-1)).slice(0,5);
+
+    rows = shelves.map(s=>{
+      const nodes = s.nodes;
+      const direct = directChildCount(nodes);
+      const total = countAll(nodes);
+      const txt = textColorFor(s.color);
+      const isFlatItemShelf = nodes.length>0 && nodes[0].type==='item';
+      return `
+        <div class="shelf-card" style="background:${s.color}; color:${txt};" onclick="openShelf('${s.id}')">
+          <h3>${escapeHtml(s.name)}
+            <span class="badges-inline">
+              ${s.private?`<span class="badge filled lock-badge" style="background:rgba(0,0,0,0.35); color:${txt};"><span class="material-icon">lock</span></span>`:''}
+              ${isFlatItemShelf?'':`<span class="badge filled" style="background:rgba(0,0,0,0.2); color:${txt};">${direct}</span>`}
+              <span class="badge outline" style="border-color:${txt}; color:${txt};">${total}</span>
+            </span>
+          </h3>
+          <div class="arrow-circle" style="color:${txt};"><span class="material-icon">arrow_forward</span></div>
+        </div>`;
+    }).join('') || `<div class="empty-state">No shelves yet. Tap + to build one.</div>`;
+  }
 
   return `
     <div class="home-header">
@@ -700,7 +971,7 @@ function renderHome(){
     <div class="home-divider"></div>
     <div class="list-area" style="padding-top:18px;">${rows}</div>
     <div class="bottom-bar">
-      <input class="search-input" placeholder="Search">
+      <input id="searchInput" class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
       <button class="add-btn-circle" onclick="openBuildSheet()">+</button>
     </div>
   `;
@@ -768,9 +1039,16 @@ function buildSheetInnerHtml(){
           oninput="state.buildDraft.name=this.value"
           style="background:${activeHex}; color:${textColorFor(activeHex)};">
 
-        <div class="form-label">What categories would you like to add? <div class="depth-hint">Leave blank for a flat list of items.</div></div>
+        <div class="form-label">Should this shelf be private?</div>
+        <div class="privacy-toggle">
+          <button class="privacy-btn ${!d.isPrivate?'selected':''}" onclick="state.buildDraft.isPrivate=false; render()">Public</button>
+          <button class="privacy-btn ${d.isPrivate?'selected':''}" onclick="state.buildDraft.isPrivate=true; render()">Private</button>
+        </div>
+
+        <div class="form-label">What categories would you like to add?</div>
         ${catRows}
       </div>
+      <div class="form-bottom-fade"></div>
     </div>
     <button class="bottom-cta" onclick="saveNewShelf()"><span class="material-icon">arrow_forward</span></button>
   `;
@@ -823,15 +1101,19 @@ function saveNewShelf(){
     : [];
   const id = 's'+Date.now();
   DB.shelves.unshift({
-    id, name:d.name.trim(), color: activeColorHex(d), favorite:false,
+    id, name:d.name.trim(), color: activeColorHex(d), favorite:false, private:d.isPrivate,
     updated: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
     nodes
   });
-  state.buildDraft = { colorIdx:0, customHex:'#A89F91', name:'', categories:[''] };
+  state.buildDraft = { colorIdx:0, customHex:'#A89F91', name:'', isPrivate:false, categories:[''] };
   state.showBuildSheet = false;
   state.buildClosing = false;
   state.buildJustOpened = false;
-  go('shelf',{shelfId:id, path:[]});
+  if(d.isPrivate){
+    openShelf(id);
+  } else {
+    go('shelf',{shelfId:id, path:[]});
+  }
 }
 
 /* =====================================================
@@ -854,14 +1136,37 @@ function renderShelf(){
   window.__shelfBack = onBack;
 
   const q = state.search.trim().toLowerCase();
-  const visibleNodes = q ? nodes.filter(n=> n.name.toLowerCase().includes(q)) : nodes;
 
   let bodyHtml = '';
   let listClass = 'list-area';
   const isGroupLevel = nodes.length===0 || nodes[0].type==='group';
   const justToggledEdit = !!state.editJustToggled;
 
-  if(isGroupLevel){
+  if(q){
+    // Global recursive search across the entire shelf, not just the current level.
+    listClass += ' with-side-pad';
+    const results = searchTree(shelf.nodes, q);
+    if(results.length===0){
+      bodyHtml = `<div class="empty-state">No results for "${escapeHtml(state.search.trim())}"</div>`;
+    } else {
+      bodyHtml = results.map(r=>{
+        const crumb = [shelf.name, ...r.trailNames].join(' / ');
+        if(r.node.type==='group'){
+          const c = countAll(r.node.children||[]);
+          return `
+            <div class="search-result-row" onclick="goToSearchResult(${jsArrayLiteral(r.trailIds.concat(r.node.id))})">
+              ${crumb?`<div class="search-result-crumb">${escapeHtml(crumb)}</div>`:''}
+              <div class="search-result-name">${escapeHtml(r.node.name)} <span class="count">(${c})</span></div>
+            </div>`;
+        }
+        return `
+          <div class="search-result-row" onclick="goToSearchResult(${jsArrayLiteral(r.trailIds)})">
+            ${crumb?`<div class="search-result-crumb">${escapeHtml(crumb)}</div>`:''}
+            <div class="search-result-name">${escapeHtml(r.node.name)}</div>
+          </div>`;
+      }).join('');
+    }
+  } else if(isGroupLevel){
     if(state.editing){
       listClass += ' with-side-pad';
       // editable rows: underline contenteditable div + minus/plus circles, matching Build a Shelf category editor
@@ -884,35 +1189,63 @@ function renderShelf(){
           </div>
         </div>
       ` : '');
-    } else if(visibleNodes.length===0){
+    } else if(nodes.length===0){
       bodyHtml = `<div class="empty-state">Nothing here yet.</div>`;
     } else if(atRoot){
       // root: simple serif rows (e.g. cities)
-      bodyHtml = visibleNodes.map(n=>`<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)}</div>`).join('');
+      bodyHtml = nodes.map(n=>`<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)}</div>`).join('');
     } else {
       // nested groups: bold sans rows (e.g. categories)
-      bodyHtml = visibleNodes.map(n=>{
+      bodyHtml = nodes.map(n=>{
         const c = countAll(n.children||[]);
         return `<div class="cat-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)} <span class="count">(${c})</span></div>`;
       }).join('');
     }
   } else {
-    if(visibleNodes.length===0){
-      bodyHtml = `<div class="empty-state">Nothing here yet.</div>`;
+    if(nodes.length===0){
+      bodyHtml = `<div class="add-item-row" onclick="quickAddItem()">
+        <span>Add Item</span>
+        <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+      </div>` + `<div class="empty-state">Nothing here yet.</div>`;
     } else {
-      bodyHtml = visibleNodes.map(n=>`
-        <div class="item-card ${state.editing?'editing':''}">
+      const newestFirst = [...nodes].reverse();
+      bodyHtml = `<div class="add-item-row" onclick="quickAddItem()">
+        <span>Add Item</span>
+        <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+      </div>` + newestFirst.map(n=>{
+        if(state.editing){
+          return `
+            <div class="item-card editing-fields">
+              <div class="item-edit-top">
+                <div class="item-name-input" contenteditable="true" data-placeholder="Item name" data-name-for="${n.id}"
+                  oninput="updateItemField('${n.id}','name',this.textContent)"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.name)}</div>
+                <div class="cat-row-actions">
+                  <button class="add-circle" onclick="deleteItem('${n.id}')">−</button>
+                  <button class="add-circle" onclick="quickAddItem()">+</button>
+                </div>
+              </div>
+              <div class="item-note-input" contenteditable="true" data-placeholder="Add Note" data-note-for="${n.id}"
+                oninput="updateItemField('${n.id}','note',this.innerText)">${escapeHtml(n.note||'')}</div>
+              <div class="item-link-row">
+                <span class="material-icon link-icon">link</span>
+                <div class="item-link-input" contenteditable="true" data-placeholder="Add Link"
+                  oninput="updateItemField('${n.id}','link',this.textContent)"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.link||'')}</div>
+              </div>
+            </div>
+          `;
+        }
+        return `
+        <div class="item-card">
           <div>
             <div class="name">${escapeHtml(n.name)}</div>
-            ${n.location?`<div class="loc">${escapeHtml(n.location)}</div>`:''}
             ${n.note?`<div class="note">${escapeHtml(n.note)}</div>`:''}
             ${n.link?`<a class="link" href="${escapeHtml(n.link)}" target="_blank" onclick="event.stopPropagation()"><span class="material-icon link-icon">link</span> ${escapeHtml(n.link)}</a>`:''}
           </div>
-          ${state.editing?`<div class="edit-actions">
-            <button class="icon-btn" onclick="deleteItem('${n.id}')">✕</button>
-          </div>`:''}
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
   }
 
@@ -924,7 +1257,7 @@ function renderShelf(){
       </div>
       <!-- Date intentionally hidden from UI; shelf.updated is still stored and formatted via formatShortDate() if needed later -->
       <span class="title-center hidden"></span>
-      <button class="pill-btn" onclick="state.editing=!state.editing; state.editJustToggled=true; render()">${state.editing?'Done':'Edit'}</button>
+      <button class="pill-btn" onclick="toggleShelfEditing()">${state.editing?'Done':'Edit'}</button>
     </div>
     <div class="crumb-row">
       <div class="crumb-title">
@@ -934,12 +1267,11 @@ function renderShelf(){
           <span class="badge outline">${total}</span>
         </span>
       </div>
-      ${(!isGroupLevel && state.editing)?`<span class="right-edit" onclick="addGroupPrompt()">+ Add</span>`:''}
     </div>
     ${parentCrumb ? `<div class="group-title-row"><span>${escapeHtml(parentCrumb)}</span>${parentSubCrumb?` <span class="group-title-sub">/ ${escapeHtml(parentSubCrumb)}</span>`:''}</div>` : ''}
     <div id="shelfListArea" class="${listClass}${justToggledEdit?' rows-slide-container':''}" style="padding-top:${parentCrumb ? '14' : '22'}px;">${bodyHtml}</div>
     <div class="bottom-bar">
-      <input class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
+      <input id="searchInput" class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
       <button class="add-btn-circle" onclick="openBuildSheet()">+</button>
     </div>
   `;
@@ -951,6 +1283,47 @@ function drillInto(nodeId){
   render();
 }
 
+function updateItemField(nodeId, field, value){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const node = nodes.find(n=>String(n.id)===String(nodeId));
+  if(node) node[field] = value;
+  // intentionally no render() here so the field doesn't lose focus while typing
+}
+
+function toggleShelfEditing(){
+  if(state.editing){
+    // leaving edit mode ("Done") — clean up any item the user added but never filled in
+    const shelf = findShelf(state.shelfId);
+    const {nodes} = resolvePath(shelf, state.path);
+    for(let i=nodes.length-1; i>=0; i--){
+      const n = nodes[i];
+      if(n.type==='item'){
+        const blank = !(n.name||'').trim() && !(n.note||'').trim() && !(n.link||'').trim();
+        if(blank) nodes.splice(i,1);
+      }
+    }
+    state.editing = false;
+  } else {
+    state.editing = true;
+  }
+  state.editJustToggled = true;
+  render();
+}
+
+function quickAddItem(){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const newId = Date.now();
+  nodes.push({id:newId, type:'item', name:'', note:'', link:''});
+  state.editing = true;
+  render();
+  requestAnimationFrame(()=>{
+    const el = document.querySelector(`[data-name-for="${newId}"]`);
+    if(el) el.focus();
+  });
+}
+
 function addGroupPrompt(){
   const shelf = findShelf(state.shelfId);
   const {nodes} = resolvePath(shelf, state.path);
@@ -958,10 +1331,9 @@ function addGroupPrompt(){
   if(isItemLevel){
     const name = prompt('Item name?');
     if(!name) return;
-    const location = prompt('Location / area? (optional)')||'';
     const note = prompt('Note? (optional)')||'';
     const link = prompt('Link? (optional)')||'';
-    nodes.push({id:Date.now(), type:'item', name, location, note, link});
+    nodes.push({id:Date.now(), type:'item', name, note, link});
   } else {
     const name = prompt('New group / category name? (Leave blank to add an item instead)');
     if(name){
@@ -1019,13 +1391,38 @@ function deleteGroupRow(nodeId){
 ===================================================== */
 function render(){
   const app = document.getElementById('app');
+
+  // Capture focus state before re-rendering so inputs (like search) don't
+  // lose the cursor on every keystroke when the DOM gets replaced.
+  const active = document.activeElement;
+  const activeId = active && active.id;
+  const selStart = (active && typeof active.selectionStart === 'number') ? active.selectionStart : null;
+  const selEnd = (active && typeof active.selectionEnd === 'number') ? active.selectionEnd : null;
+
+  // Capture the Build a Shelf form's scroll position too, since it gets
+  // fully torn down and rebuilt on every keystroke/button click inside it.
+  const existingFormArea = document.querySelector('.sheet-panel .form-area');
+  const formScrollTop = existingFormArea ? existingFormArea.scrollTop : 0;
+
   let html = '';
   if(state.screen==='home') html = renderHome();
   else if(state.screen==='shelf') html = renderShelf();
   app.innerHTML = html;
 
+  if(activeId){
+    const el = document.getElementById(activeId);
+    if(el){
+      el.focus();
+      if(selStart!=null && el.setSelectionRange){
+        try{ el.setSelectionRange(selStart, selEnd); }catch(e){}
+      }
+    }
+  }
+
   if(state.showBuildSheet || state.buildClosing){
     mountBuildSheet();
+    const newFormArea = document.querySelector('.sheet-panel .form-area');
+    if(newFormArea) newFormArea.scrollTop = formScrollTop;
   }
 
   if(state.editJustToggled){
@@ -1042,13 +1439,60 @@ function render(){
         setTimeout(()=>{
           container.style.transition = '';
           container.style.height = '';
+          container.classList.remove('rows-slide-container');
         }, 340);
       });
     }
   }
 }
 
-render();
+/* =====================================================
+   SIMPLE PASSWORD GATE
+   NOTE: This is a basic front-end deterrent only, not real
+   security — the password lives in this file's source code,
+   visible to anyone who views page source. Good enough to keep
+   out casual visitors, not appropriate for sensitive data.
+===================================================== */
+const SITE_PASSWORD = 'shelby'; // <-- change this to whatever you want
+const PRIVATE_SHELF_PASSWORD = 'private2026'; // <-- separate password for shelves marked Private
+const AUTH_STORAGE_KEY = 'shelved_unlocked';
+
+function checkSitePassword(){
+  const input = document.getElementById('passwordInput');
+  const errorEl = document.getElementById('passwordGateError');
+  if(input.value === SITE_PASSWORD){
+    localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+    unlockSite();
+  } else {
+    errorEl.classList.remove('hidden');
+    input.value = '';
+    input.focus();
+  }
+}
+
+function unlockSite(){
+  document.getElementById('passwordGate').classList.add('hidden');
+  render();
+}
+
+if(localStorage.getItem(AUTH_STORAGE_KEY) === 'true'){
+  unlockSite();
+} else {
+  document.getElementById('passwordGate').style.display = 'flex';
+}
+
+// iOS Safari can leave the layout height stale after the on-screen keyboard
+// shows/hides while editing a contenteditable field, which can lock the
+// list area at a height that no longer matches the real viewport (so it
+// stops scrolling). Force a reflow by nudging #app's height whenever the
+// visual viewport changes.
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', ()=>{
+    const app = document.getElementById('app');
+    if(!app) return;
+    app.style.height = window.visualViewport.height + 'px';
+  });
+}
 </script>
 </body>
 </html>
