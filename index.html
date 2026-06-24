@@ -127,8 +127,7 @@
     padding: max(28px, env(safe-area-inset-top)) var(--side) 0;
   }
   .home-header-row{
-    display:flex; align-items:center; justify-content:space-between;
-    min-height:46px;
+    display:flex; align-items:baseline; justify-content:space-between;
   }
   .home-header h1{
     font-family:var(--font-sans);
@@ -140,7 +139,6 @@
   }
   .tab-stack{
     display:flex; flex-direction:column; align-items:flex-end;
-    margin-top:16px;
     margin-right:6px;
   }
   .tab-stack button{
@@ -654,12 +652,11 @@ function renderHome(){
     <div class="home-header">
       <div class="home-header-row">
         <h1>Shelved</h1>
-        <button class="pill-btn">Edit</button>
-      </div>
-      <div class="tab-stack">
-        <button class="${tab==='favorites'?'active':''}" onclick="state.homeTab='favorites'; render()">Favorites</button>
-        <button class="${tab==='recents'?'active':''}" onclick="state.homeTab='recents'; render()">Recents</button>
-        <button class="${tab==='all'?'active':''}" onclick="state.homeTab='all'; render()">All</button>
+        <div class="tab-stack">
+          <button class="${tab==='favorites'?'active':''}" onclick="state.homeTab='favorites'; render()">Favorites</button>
+          <button class="${tab==='recents'?'active':''}" onclick="state.homeTab='recents'; render()">Recents</button>
+          <button class="${tab==='all'?'active':''}" onclick="state.homeTab='all'; render()">All</button>
+        </div>
       </div>
     </div>
     <div class="home-divider"></div>
