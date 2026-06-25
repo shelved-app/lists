@@ -80,9 +80,9 @@
     position:relative;
   }
   .circle-btn{
-    width:46px;height:46px;border-radius:50%;
-    border:1.5px solid var(--burgundy);
-    background:transparent;color:var(--burgundy);
+    width:42px;height:42px;border-radius:50%;
+    border:1.5px solid var(--dark-text);
+    background:transparent;color:var(--dark-text);
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0; cursor:pointer; font-size:16px;
     font-family:var(--font-sans);
@@ -90,7 +90,7 @@
   .circle-btn:active{ opacity:.6; }
 
   .circle-btn-filled{
-    width:46px;height:46px;border-radius:50%;
+    width:42px;height:42px;border-radius:50%;
     border:none;
     background:var(--dark-text);color:var(--white);
     display:flex;align-items:center;justify-content:center;
@@ -102,7 +102,7 @@
     font-variation-settings: 'FILL' 1, 'wght' 400, 'opsz' 20, 'GRAD' 0;
   }
 
-  .topbar-left{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .topbar-left{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
   .topbar .title-center{
     position:absolute; left:50%; top:50%;
     transform:translate(-50%,-50%);
@@ -127,7 +127,8 @@
     padding: max(28px, env(safe-area-inset-top)) var(--side) 0;
   }
   .home-header-row{
-    display:flex; align-items:baseline; justify-content:space-between;
+    display:flex; align-items:center; justify-content:space-between;
+    min-height:42px;
   }
   .home-header h1{
     margin:0;
@@ -143,6 +144,7 @@
   }
   .tab-stack{
     display:flex; flex-direction:column; align-items:flex-end;
+    margin-top:16px;
     margin-right:6px;
   }
   .tab-stack button{
@@ -185,9 +187,9 @@
   .group-title-sub{
     color:var(--text-alt); font-weight:400;
   }
-  .count-badges{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
+  .count-badges{ display:flex; gap:6px; align-items:center; flex-shrink:0; }
   .badge{
-    width:46px; height:46px; border-radius:50%;
+    width:42px; height:42px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     font-family:var(--font-sans);
     font-size:14px; font-weight:600;
@@ -196,7 +198,11 @@
   }
   .badge.filled{ background:var(--green); color:var(--white); }
   .badge.outline{ background:transparent; border:1.5px solid var(--green); color:var(--dark-text); }
-  .badge.lock-badge .material-icon{ font-size:20px; }
+  .shelf-card .shelf-lock-icon{
+    font-size:19px;
+    margin-left:-2px;
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'opsz' 20, 'GRAD' 0;
+  }
   .right-edit{
     color:var(--text-alt); font-size:14px; font-weight:500; cursor:pointer; flex-shrink:0;
   }
@@ -220,7 +226,7 @@
 
   /* category rows (bold sans, Casual/Fancy/...) */
   .cat-row{
-    font-family:var(--font-sans); font-size:19px; font-weight:500; line-height:21px;
+    font-family:var(--font-sans); font-size:17px; font-weight:500; line-height:21px;
     padding:6px var(--side); cursor:pointer; color:var(--dark-text);
   }
   .cat-row .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
@@ -235,7 +241,7 @@
     margin: 0 0 8px 0;
     cursor:pointer;
     color:var(--text-alt);
-    font-family:var(--font-sans); font-size:17px; font-weight:600;
+    font-family:var(--font-sans); font-size:15px; font-weight:600;
   }
   .add-circle-outline{
     width:24px;height:24px;border-radius:50%;
@@ -258,7 +264,7 @@
   .item-name-input{
     flex:1; border:none; border-bottom:1.5px solid rgba(16,5,7,0.5);
     background:transparent; color:var(--dark-text); outline:none;
-    font-family:var(--font-sans); font-size:17px; font-weight:700; line-height:20px;
+    font-family:var(--font-sans); font-size:15px; font-weight:700; line-height:20px;
     padding:0 0 4px;
   }
   .item-name-input:empty:before{
@@ -287,7 +293,7 @@
     content: attr(data-placeholder);
     color:var(--text-alt);
   }
-  .item-card .name{ font-weight:700; font-size:17px; margin-bottom:4px;}
+  .item-card .name{ font-weight:700; font-size:15px; margin-bottom:4px;}
   .item-card .note{ font-size:14px; font-weight:500; color:var(--dark-text); margin-bottom:6px; white-space:pre-wrap; line-height:17pt; }
   .item-card .link{
     font-size:13px; font-weight:500; color:var(--text-alt); display:flex; gap:6px; align-items:center;
@@ -315,9 +321,28 @@
     font-family:var(--font-serif); font-size:28px; margin:0; font-weight:400;
     display:flex; align-items:center; gap:10px;
   }
-  .shelf-card .badges-inline{ display:flex; gap:8px; }
+  .shelf-card .badges-inline{ display:flex; gap:6px; }
+  @keyframes homeFadeIn{
+    from{ opacity:0; }
+    to{ opacity:1; }
+  }
+  .home-fade-in{ animation: homeFadeIn 0.3s ease; }
+  .home-edit-actions{ display:flex; gap:6px; align-items:center; }
+  .home-edit-icon-btn{
+    width:42px; height:42px; border-radius:50%;
+    border:1.5px solid currentColor; background:transparent;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0;
+  }
+  .home-edit-icon-btn .material-icon{ font-size:20px; }
+  .drag-handle{ cursor:grab; touch-action:none; }
+  .drag-handle.drag-disabled{ opacity:.35; cursor:not-allowed; }
+  .shelf-card.dragging{
+    box-shadow:0 8px 20px rgba(0,0,0,0.25);
+    transition:none !important;
+  }
   .shelf-card .arrow-circle{
-    width:46px;height:46px;border-radius:50%;
+    width:42px;height:42px;border-radius:50%;
     border:1.5px solid currentColor;
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
@@ -403,8 +428,8 @@
   .cat-input-row.sub-level{ margin-bottom:0; }
   .cat-row-actions{ display:flex; gap:6px; flex-shrink:0; }
   .add-circle{
-    width:24px;height:24px;border-radius:50%;border:1.5px solid var(--burgundy);
-    color:var(--burgundy); background:transparent; display:flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:50%;border:1.5px solid var(--dark-text);
+    color:var(--dark-text); background:transparent; display:flex;align-items:center;justify-content:center;
     flex-shrink:0; cursor:pointer; font-size:14px; line-height:1; padding:0;
   }
   .cat-text-input{
@@ -420,8 +445,8 @@
     color:var(--text-alt); font-weight:500;
   }
   .cat-text-input.sub-level{
-    font-size:19px;
-    line-height:23px;
+    font-size:17px;
+    line-height:21px;
     padding:6px 0 4.5px;
   }
   .depth-hint{ font-size:13px; color:var(--text-alt); margin-top:6px; font-weight:400; }
@@ -429,7 +454,7 @@
   /* floating round CTA bottom-right */
   .bottom-cta{
     position:absolute; right:var(--side); bottom: calc(18px + env(safe-area-inset-bottom));
-    width:46px;height:46px;border-radius:50%;
+    width:42px;height:42px;border-radius:50%;
     background:var(--dark-text); color:var(--white);
     border:none; font-size:18px; cursor:pointer;
     display:flex;align-items:center;justify-content:center;
@@ -456,7 +481,7 @@
   }
   .search-input::placeholder{ color:var(--text-alt); }
   .add-btn-circle{
-    width:46px;height:46px;border-radius:50%;
+    width:42px;height:42px;border-radius:50%;
     border:none; background:var(--dark-text);
     color:var(--white); flex-shrink:0; cursor:pointer; font-size:18px;
     display:flex;align-items:center;justify-content:center;
@@ -476,6 +501,13 @@
     font-family:var(--font-sans); font-size:17px; font-weight:700; color:var(--dark-text);
   }
   .search-result-name .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
+
+  .empty-level-choice{ margin-top:4px; }
+  .empty-level-or{
+    text-align:center; font-family:var(--font-sans); font-size:13px; font-weight:700;
+    text-transform:uppercase;
+    color:var(--text-alt); margin:14px 0;
+  }
 
   .empty-state{
     text-align:center; color:var(--text-alt); padding:60px var(--side); font-size:15px;
@@ -600,7 +632,19 @@
 </div>
 <div id="app"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+/* =====================================================
+   SUPABASE CONFIG
+   Fill these in with your own project's values:
+   Supabase Dashboard → Project Settings → API
+   - "Project URL"      → SUPABASE_URL
+   - "anon public" key  → SUPABASE_ANON_KEY
+===================================================== */
+const SUPABASE_URL = 'https://pvvhfhemkoypoyuxagzx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2dmhmaGVta295cG95dXhhZ3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNDIzMDcsImV4cCI6MjA5NzkxODMwN30.Dk6WHSoU0ElGsTTTL8JrI3QYNvPpN2M2xO_sUbxSy3g';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 /* =====================================================
    MOCK DATA
 ===================================================== */
@@ -658,101 +702,128 @@ function textColorFor(hex){
 }
 
 let DB = {
-  shelves: [
-    {
-      id:'restaurants', name:'Restaurants', color:'#71600F', favorite:true,
-      updated:'June 20, 2026',
-      nodes:[
-        { id:'kc', type:'group', name:'Kansas City', children:[
-          { id:'kc-casual', type:'group', name:'Casual', children:[
-            { id:1, type:'item', name:"LuLu's Thai Diner" },
-            { id:2, type:'item', name:'Beramee', note:'Crossroads', link:'https://www.barameethaibistro.com/' },
-            { id:3, type:'item', name:"Billie's Grocery", note:'Union Hill\nBest Cheddar Grits in town', link:'https://www.billiesgrocery.com/' },
-            { id:4, type:'item', name:"Mildred's" },
-            { id:5, type:'item', name:'Town Topic' },
-            { id:6, type:'item', name:'Hemma Hemma' },
-          ]},
-          { id:'kc-fancy', type:'group', name:'Fancy', children:[
-            { id:7, type:'item', name:'The Antler Room' },
-          ]},
-          { id:'kc-breakfast', type:'group', name:'Breakfast', children:[
-            { id:8, type:'item', name:'Story' },
-          ]},
-          { id:'kc-takeout', type:'group', name:'Takeout', children:[
-            { id:9, type:'item', name:'Pho Noodle Bar' },
-          ]},
-        ]},
-        { id:'boston', type:'group', name:'Boston', children:[
-          { id:'b-casual', type:'group', name:'Casual', children:[{id:10,type:'item',name:'Neptune Oyster'}] },
-        ]},
-        { id:'nyc', type:'group', name:'New York', children:[
-          { id:'ny-casual', type:'group', name:'Casual', children:[{id:11,type:'item',name:"Joe's Pizza"}] },
-        ]},
-        { id:'florence', type:'group', name:'Florence', children:[
-          { id:'fl-fancy', type:'group', name:'Fancy', children:[{id:12,type:'item',name:'Enoteca Pinchiorri'}] },
-        ]},
-        { id:'milwaukee', type:'group', name:'Milwaukee', children:[
-          { id:'mil-casual', type:'group', name:'Casual', children:[{id:13,type:'item',name:'Comet Cafe'}] },
-        ]},
-        { id:'stl', type:'group', name:'St. Louis', children:[
-          { id:'stl-casual', type:'group', name:'Casual', children:[{id:14,type:'item',name:'Pappy\'s Smokehouse'}] },
-        ]},
-      ]
-    },
-    {
-      id:'movies', name:'Movies', color:'#CCD6FF', favorite:true,
-      updated:'June 18, 2026',
-      nodes:[
-        { id:101, type:'item', name:'Paris, Texas', note:'Wim Wenders, 1984' },
-        { id:102, type:'item', name:'In the Mood for Love', note:'Wong Kar-wai' },
-        { id:103, type:'item', name:'Stalker' },
-        { id:104, type:'item', name:'The Tree of Life' },
-      ]
-    },
-    {
-      id:'our-story', name:'Our Story', color:'#8E4B4F', favorite:true,
-      updated:'June 12, 2026',
-      nodes:[
-        { id:201, type:'item', name:'How we met', note:'A coffee shop on 5th.' },
-        { id:202, type:'item', name:'First trip together', note:'Lisbon' },
-        { id:203, type:'item', name:'The proposal' },
-        { id:204, type:'item', name:'Moving in' },
-      ]
-    },
-    {
-      id:'museums', name:'Museums', color:'#581000', favorite:true,
-      updated:'June 10, 2026',
-      nodes:[
-        { id:'mus-art', type:'group', name:'Art', children:[{id:301,type:'item',name:'The Nelson-Atkins'}] },
-        { id:'mus-history', type:'group', name:'History', children:[{id:302,type:'item',name:'The National WWI Museum'}] },
-      ]
-    },
-    {
-      id:'travel-domestic', name:'Travel', color:'#D1975C', favorite:true,
-      updated:'June 9, 2026',
-      nodes:[
-        { id:401, type:'item', name:'Big Sur', note:'California' },
-        { id:402, type:'item', name:'Door County', note:'Wisconsin' },
-      ]
-    },
-    {
-      id:'travel-intl', name:'Travel', color:'#F25801', favorite:true,
-      updated:'June 8, 2026',
-      nodes:[
-        { id:501, type:'item', name:'Kyoto', note:'Japan' },
-        { id:502, type:'item', name:'Porto', note:'Portugal' },
-      ]
-    },
-    {
-      id:'tv', name:'TV Series', color:'#D3B8E8', favorite:true,
-      updated:'June 7, 2026',
-      nodes:[
-        { id:601, type:'item', name:'The Bear' },
-        { id:602, type:'item', name:'Severance' },
-      ]
-    },
-  ]
+  shelves: []
 };
+
+/* =====================================================
+   SUPABASE DATA LAYER
+   DB.shelves is the in-memory tree the rest of the app already
+   reads/mutates directly (unchanged). These functions load that
+   tree from Supabase on startup, and persist each mutation back
+   to Supabase right after the local mutation happens, so the UI
+   stays instant while the database catches up in the background.
+===================================================== */
+
+async function loadDataFromSupabase(){
+  const [{ data: shelfRows, error: shelfErr }, { data: nodeRows, error: nodeErr }] = await Promise.all([
+    sb.from('shelves').select('*').order('sort_order', { ascending: true }),
+    sb.from('nodes').select('*').order('sort_order', { ascending: true }),
+  ]);
+
+  if(shelfErr || nodeErr){
+    console.error('Supabase load error:', shelfErr || nodeErr);
+    document.getElementById('app').innerHTML = `
+      <div style="padding:40px 24px; font-family:sans-serif; color:#100507;">
+        <h2>Couldn't load your shelves</h2>
+        <p>Check that SUPABASE_URL and SUPABASE_ANON_KEY are filled in correctly near the top of this file's &lt;script&gt; tag, and that the schema has been run in your Supabase project.</p>
+        <p style="color:#84696D; font-size:13px;">${escapeHtml((shelfErr||nodeErr).message||'')}</p>
+      </div>`;
+    return;
+  }
+
+  // Build each node's children array from the flat nodes table by parent_id.
+  const nodesByParent = {};
+  nodeRows.forEach(row=>{
+    const key = row.parent_id || `root:${row.shelf_id}`;
+    if(!nodesByParent[key]) nodesByParent[key] = [];
+    nodesByParent[key].push(row);
+  });
+
+  function buildChildren(node){
+    const children = nodesByParent[node.id] || [];
+    return children.map(row => toLocalNode(row));
+  }
+
+  function toLocalNode(row){
+    const local = { id: row.id, type: row.type, name: row.name };
+    if(row.type === 'item'){
+      local.note = row.note || '';
+      local.link = row.link || '';
+    } else {
+      local.children = [];
+    }
+    return local;
+  }
+
+  // First pass: build a flat map of every node so we can attach children.
+  const allLocalById = {};
+  nodeRows.forEach(row => { allLocalById[row.id] = toLocalNode(row); });
+  nodeRows.forEach(row => {
+    if(row.type === 'group'){
+      const kids = nodesByParent[row.id] || [];
+      allLocalById[row.id].children = kids.map(r => allLocalById[r.id]);
+    }
+  });
+
+  DB.shelves = shelfRows.map(row => ({
+    id: row.id,
+    name: row.name,
+    color: row.color,
+    favorite: row.is_favorite,
+    private: row.is_private,
+    updated: row.updated_at,
+    nodes: (nodesByParent[`root:${row.id}`] || []).map(r => allLocalById[r.id]),
+  }));
+
+  render();
+}
+
+async function dbInsertShelf(shelf){
+  const { data, error } = await sb.from('shelves').insert({
+    name: shelf.name, color: shelf.color,
+    is_private: !!shelf.private, is_favorite: !!shelf.favorite,
+    sort_order: DB.shelves.length,
+  }).select().single();
+  if(error){ console.error('Insert shelf failed:', error); return null; }
+  return data;
+}
+
+async function dbUpdateShelf(id, fields){
+  const payload = {};
+  if('name' in fields) payload.name = fields.name;
+  if('color' in fields) payload.color = fields.color;
+  if('private' in fields) payload.is_private = fields.private;
+  if('favorite' in fields) payload.is_favorite = fields.favorite;
+  if('sort_order' in fields) payload.sort_order = fields.sort_order;
+  payload.updated_at = new Date().toISOString();
+  const { error } = await sb.from('shelves').update(payload).eq('id', id);
+  if(error) console.error('Update shelf failed:', error);
+}
+
+async function dbDeleteShelf(id){
+  const { error } = await sb.from('shelves').delete().eq('id', id);
+  if(error) console.error('Delete shelf failed:', error);
+}
+
+async function dbInsertNode({ shelfId, parentId, type, name, note, link, sortOrder }){
+  const { data, error } = await sb.from('nodes').insert({
+    shelf_id: shelfId, parent_id: parentId || null, type,
+    name: name || '', note: note || null, link: link || null,
+    sort_order: sortOrder || 0,
+  }).select().single();
+  if(error){ console.error('Insert node failed:', error); return null; }
+  return data;
+}
+
+async function dbUpdateNode(id, fields){
+  const { error } = await sb.from('nodes').update(fields).eq('id', id);
+  if(error) console.error('Update node failed:', error);
+}
+
+async function dbDeleteNode(id){
+  const { error } = await sb.from('nodes').delete().eq('id', id);
+  if(error) console.error('Delete node failed:', error);
+}
 
 /* =====================================================
    STATE / ROUTER
@@ -760,6 +831,8 @@ let DB = {
 let state = {
   screen:'home',
   homeTab:'favorites',
+  homeEditing:false,
+  homeEditJustToggled:false,
   shelfId:null,
   path:[],
   editing:false,
@@ -775,6 +848,144 @@ let state = {
 function go(screen, extra={}){
   state = {...state, screen, editing:false, search:'', ...extra};
   render();
+}
+
+function toggleHomeEditing(){
+  state.homeEditing = !state.homeEditing;
+  state.homeEditJustToggled = true;
+  render();
+}
+
+function toggleShelfFavorite(shelfId){
+  const shelf = findShelf(shelfId);
+  if(!shelf) return;
+  shelf.favorite = !shelf.favorite;
+  render();
+  dbUpdateShelf(shelfId, { favorite: shelf.favorite });
+}
+
+function removeShelfPrompt(shelfId){
+  const shelf = findShelf(shelfId);
+  if(!shelf) return;
+  const direct = directChildCount(shelf.nodes);
+  const total = countAll(shelf.nodes);
+  if(direct>0 || total>0){
+    const ok = confirm(`"${shelf.name}" still has content inside (${total} item${total===1?'':'s'}). Deleting it will remove everything inside as well. Continue?`);
+    if(!ok) return;
+  }
+  const idx = DB.shelves.findIndex(s=>s.id===shelfId);
+  if(idx>-1) DB.shelves.splice(idx,1);
+  render();
+  dbDeleteShelf(shelfId); // cascade deletes its nodes too
+}
+
+function deleteCurrentShelf(shelfId){
+  const shelf = findShelf(shelfId);
+  if(!shelf) return;
+  const direct = directChildCount(shelf.nodes);
+  const total = countAll(shelf.nodes);
+  if(direct>0 || total>0){
+    const ok = confirm(`"${shelf.name}" still has content inside (${total} item${total===1?'':'s'}). Deleting it will remove everything inside as well. Continue?`);
+    if(!ok) return;
+  }
+  const idx = DB.shelves.findIndex(s=>s.id===shelfId);
+  if(idx>-1) DB.shelves.splice(idx,1);
+  go('home');
+  dbDeleteShelf(shelfId);
+}
+
+/* =====================================================
+   HOME SHELF DRAG-TO-REORDER
+===================================================== */
+let dragState = null;
+
+function startShelfDrag(e, shelfId){
+  e.preventDefault();
+  const card = document.querySelector(`.shelf-card[data-shelf-id="${shelfId}"]`);
+  if(!card) return;
+  const listArea = card.closest('.list-area');
+  dragState = {
+    shelfId,
+    card,
+    listArea,
+    startY: e.clientY,
+    cardStartTop: card.offsetTop,
+    pointerId: e.pointerId,
+  };
+  card.classList.add('dragging');
+  card.style.position = 'relative';
+  card.style.zIndex = '10';
+  document.addEventListener('pointermove', onShelfDragMove);
+  document.addEventListener('pointerup', endShelfDrag);
+  document.addEventListener('pointercancel', endShelfDrag);
+}
+
+function onShelfDragMove(e){
+  if(!dragState) return;
+  const deltaY = e.clientY - dragState.startY;
+  dragState.card.style.transform = `translateY(${deltaY}px)`;
+
+  // Figure out which sibling card the dragged card is currently overlapping,
+  // and swap their order in the underlying data + DOM in real time.
+  const siblings = Array.from(dragState.listArea.querySelectorAll('.shelf-card'));
+  const draggedRect = dragState.card.getBoundingClientRect();
+  const draggedMid = draggedRect.top + draggedRect.height/2;
+
+  for(const sib of siblings){
+    if(sib === dragState.card) continue;
+    const rect = sib.getBoundingClientRect();
+    const sibMid = rect.top + rect.height/2;
+    const draggedIndex = siblings.indexOf(dragState.card);
+    const sibIndex = siblings.indexOf(sib);
+
+    if(draggedIndex < sibIndex && draggedMid > sibMid){
+      swapShelves(dragState.shelfId, sib.dataset.shelfId);
+      dragState.card.style.transform = 'translateY(0px)';
+      dragState.startY = e.clientY;
+      break;
+    } else if(draggedIndex > sibIndex && draggedMid < sibMid){
+      swapShelves(dragState.shelfId, sib.dataset.shelfId);
+      dragState.card.style.transform = 'translateY(0px)';
+      dragState.startY = e.clientY;
+      break;
+    }
+  }
+}
+
+function swapShelves(idA, idB){
+  const indexA = DB.shelves.findIndex(s=>s.id===idA);
+  const indexB = DB.shelves.findIndex(s=>s.id===idB);
+  if(indexA===-1 || indexB===-1) return;
+  [DB.shelves[indexA], DB.shelves[indexB]] = [DB.shelves[indexB], DB.shelves[indexA]];
+
+  // Persist the new order for the two shelves that moved.
+  dbUpdateShelf(idA, { sort_order: indexB });
+  dbUpdateShelf(idB, { sort_order: indexA });
+
+  // Re-render the list (preserving drag state) so the swapped DOM order matches.
+  const savedDragState = dragState;
+  render();
+  // Re-acquire the dragged card reference since render() rebuilt the DOM.
+  const newCard = document.querySelector(`.shelf-card[data-shelf-id="${savedDragState.shelfId}"]`);
+  if(newCard){
+    newCard.classList.add('dragging');
+    newCard.style.position = 'relative';
+    newCard.style.zIndex = '10';
+    dragState.card = newCard;
+    dragState.listArea = newCard.closest('.list-area');
+  }
+}
+
+function endShelfDrag(e){
+  if(!dragState) return;
+  dragState.card.classList.remove('dragging');
+  dragState.card.style.transform = '';
+  dragState.card.style.position = '';
+  dragState.card.style.zIndex = '';
+  document.removeEventListener('pointermove', onShelfDragMove);
+  document.removeEventListener('pointerup', endShelfDrag);
+  document.removeEventListener('pointercancel', endShelfDrag);
+  dragState = null;
 }
 
 function openShelf(shelfId, path=[]){
@@ -925,22 +1136,42 @@ function renderHome(){
     if(tab==='favorites') shelves = shelves.filter(s=>s.favorite);
     if(tab==='recents') shelves = [...shelves].sort((a,b)=> (a.updated<b.updated?1:-1)).slice(0,5);
 
+    const homeJustToggled = !!state.homeEditJustToggled;
+    state.homeEditJustToggled = false;
+
     rows = shelves.map(s=>{
       const nodes = s.nodes;
       const direct = directChildCount(nodes);
       const total = countAll(nodes);
       const txt = textColorFor(s.color);
       const isFlatItemShelf = nodes.length>0 && nodes[0].type==='item';
+      const isEmpty = direct===0 && total===0;
+      const cardClick = state.homeEditing ? '' : `onclick="openShelf('${s.id}')"`;
+      const fadeClass = homeJustToggled ? ' home-fade-in' : '';
+      const dragEnabled = tab==='all' || tab==='favorites';
       return `
-        <div class="shelf-card" style="background:${s.color}; color:${txt};" onclick="openShelf('${s.id}')">
+        <div class="shelf-card" data-shelf-id="${s.id}" style="background:${s.color}; color:${txt};" ${cardClick}>
           <h3>${escapeHtml(s.name)}
-            <span class="badges-inline">
-              ${s.private?`<span class="badge filled lock-badge" style="background:rgba(0,0,0,0.35); color:${txt};"><span class="material-icon">lock</span></span>`:''}
+            ${s.private?`<span class="material-icon shelf-lock-icon" style="color:${txt};">lock</span>`:''}
+            ${(!state.homeEditing && !isEmpty) ? `<span class="badges-inline${fadeClass}">
               ${isFlatItemShelf?'':`<span class="badge filled" style="background:rgba(0,0,0,0.2); color:${txt};">${direct}</span>`}
               <span class="badge outline" style="border-color:${txt}; color:${txt};">${total}</span>
-            </span>
+            </span>` : ''}
           </h3>
-          <div class="arrow-circle" style="color:${txt};"><span class="material-icon">arrow_forward</span></div>
+          ${state.homeEditing ? `
+            <span class="home-edit-actions${fadeClass}">
+              <button class="home-edit-icon-btn" style="color:${txt};" onclick="toggleShelfFavorite('${s.id}')">
+                <span class="material-icon" style="font-size:17px;${s.favorite?` font-variation-settings:'FILL' 1;`:''}">star</span>
+              </button>
+              <button class="home-edit-icon-btn drag-handle ${dragEnabled?'':'drag-disabled'}" style="color:${txt};" title="Rearrange"
+                ${dragEnabled?`onpointerdown="startShelfDrag(event,'${s.id}')"`:''}>
+                <span class="material-icon">drag_indicator</span>
+              </button>
+              <button class="home-edit-icon-btn" style="color:${txt};" onclick="removeShelfPrompt('${s.id}')">
+                <span class="material-icon">remove</span>
+              </button>
+            </span>
+          ` : `<div class="arrow-circle" style="color:${txt};"><span class="material-icon">arrow_forward</span></div>`}
         </div>`;
     }).join('') || `<div class="empty-state">No shelves yet. Tap + to build one.</div>`;
   }
@@ -961,18 +1192,19 @@ function renderHome(){
     <path d="M98.86.17c-3.39,0-6.04,2.63-6.04,5.98s2.6,5.98,6.04,5.98,5.98-2.57,5.98-5.98S102.27.17,98.86.17ZM98.86,10.71c-2.63,0-4.54-1.92-4.54-4.56s1.95-4.56,4.54-4.56,4.48,1.92,4.48,4.56-1.88,4.56-4.48,4.56Z"/>
   </g>
 </svg></h1>
-        <div class="tab-stack">
-          <button class="${tab==='favorites'?'active':''}" onclick="state.homeTab='favorites'; render()">Favorites</button>
-          <button class="${tab==='recents'?'active':''}" onclick="state.homeTab='recents'; render()">Recents</button>
-          <button class="${tab==='all'?'active':''}" onclick="state.homeTab='all'; render()">All</button>
-        </div>
+        <button class="pill-btn" onclick="toggleHomeEditing()">${state.homeEditing?'Done':'Edit'}</button>
+      </div>
+      <div class="tab-stack">
+        <button class="${tab==='favorites'?'active':''}" onclick="state.homeTab='favorites'; render()">Favorites</button>
+        <button class="${tab==='recents'?'active':''}" onclick="state.homeTab='recents'; render()">Recents</button>
+        <button class="${tab==='all'?'active':''}" onclick="state.homeTab='all'; render()">All</button>
       </div>
     </div>
     <div class="home-divider"></div>
     <div class="list-area" style="padding-top:18px;">${rows}</div>
     <div class="bottom-bar">
       <input id="searchInput" class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
-      <button class="add-btn-circle" onclick="openBuildSheet()">+</button>
+      <button class="add-btn-circle home-add-circle" onclick="openBuildSheet()">+</button>
     </div>
   `;
 }
@@ -1028,7 +1260,7 @@ function buildSheetInnerHtml(){
     <div class="sheet-panel">
       <div class="sheet-header-row">
         <div class="sheet-header-title">Build a Shelf</div>
-        <button class="circle-btn" onclick="closeBuildSheet()"><span class="material-icon">close</span></button>
+        <button class="circle-btn build-sheet-close" onclick="closeBuildSheet()"><span class="material-icon">close</span></button>
       </div>
       <div class="form-area">
         <div class="form-label">What color is your new shelf?</div>
@@ -1092,23 +1324,33 @@ function removeCategoryRow(i){
   render();
 }
 
-function saveNewShelf(){
+async function saveNewShelf(){
   const d = state.buildDraft;
   if(!d.name.trim()){ alert('Give your shelf a name first.'); return; }
   const cats = d.categories.filter(c=>c.trim());
-  const nodes = cats.length
-    ? cats.map((c,i)=>({ id: 'g'+Date.now()+i, type:'group', name:c, children:[] }))
-    : [];
-  const id = 's'+Date.now();
-  DB.shelves.unshift({
-    id, name:d.name.trim(), color: activeColorHex(d), favorite:false, private:d.isPrivate,
-    updated: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
-    nodes
-  });
-  state.buildDraft = { colorIdx:0, customHex:'#A89F91', name:'', isPrivate:false, categories:[''] };
+
   state.showBuildSheet = false;
   state.buildClosing = false;
   state.buildJustOpened = false;
+
+  const shelfRow = await dbInsertShelf({
+    name: d.name.trim(), color: activeColorHex(d), favorite:false, private:d.isPrivate,
+  });
+  if(!shelfRow){ alert('Could not save the shelf — check your Supabase connection.'); return; }
+
+  const nodes = [];
+  for(let i=0; i<cats.length; i++){
+    const nodeRow = await dbInsertNode({ shelfId: shelfRow.id, parentId:null, type:'group', name:cats[i], sortOrder:i });
+    if(nodeRow) nodes.push({ id: nodeRow.id, type:'group', name:cats[i], children:[] });
+  }
+
+  const id = shelfRow.id;
+  DB.shelves.unshift({
+    id, name:d.name.trim(), color: activeColorHex(d), favorite:false, private:d.isPrivate,
+    updated: shelfRow.updated_at,
+    nodes
+  });
+  state.buildDraft = { colorIdx:0, customHex:'#A89F91', name:'', isPrivate:false, categories:[''] };
   if(d.isPrivate){
     openShelf(id);
   } else {
@@ -1181,11 +1423,18 @@ function renderShelf(){
           </div>
         </div>
       `).join('') + (nodes.length===0 ? `
-        <div class="cat-input-row${atRoot?'':' sub-level'}">
-          <div class="cat-text-input${atRoot?'':' sub-level'}" contenteditable="true" data-placeholder="${atRoot?'Category':'Subcategory'}"
-            onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}"></div>
-          <div class="cat-row-actions">
-            <button class="add-circle" onclick="addGroupRow()">+</button>
+        <div class="empty-level-choice">
+          <div class="cat-input-row${atRoot?'':' sub-level'}">
+            <div class="cat-text-input${atRoot?'':' sub-level'}" contenteditable="true" data-placeholder="${atRoot?'Category':'Subcategory'}"
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}"></div>
+            <div class="cat-row-actions">
+              <button class="add-circle" onclick="addGroupRow()">+</button>
+            </div>
+          </div>
+          <div class="empty-level-or">or</div>
+          <div class="add-item-row" onclick="quickAddItem()">
+            <span>Add Item</span>
+            <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
           </div>
         </div>
       ` : '');
@@ -1262,10 +1511,19 @@ function renderShelf(){
     <div class="crumb-row">
       <div class="crumb-title">
         ${escapeHtml(shelf.name)}
-        <span class="count-badges">
+        ${state.editing ? `
+          <span class="home-edit-actions">
+            <button class="home-edit-icon-btn" style="color:var(--dark-text);" onclick="toggleShelfFavorite('${shelf.id}'); render();">
+              <span class="material-icon" style="font-size:17px;${shelf.favorite?` font-variation-settings:'FILL' 1;`:''}">star</span>
+            </button>
+            <button class="home-edit-icon-btn" style="color:var(--dark-text);" onclick="deleteCurrentShelf('${shelf.id}')">
+              <span class="material-icon">remove</span>
+            </button>
+          </span>
+        ` : `<span class="count-badges">
           <span class="badge filled">${direct}</span>
           <span class="badge outline">${total}</span>
-        </span>
+        </span>`}
       </div>
     </div>
     ${parentCrumb ? `<div class="group-title-row"><span>${escapeHtml(parentCrumb)}</span>${parentSubCrumb?` <span class="group-title-sub">/ ${escapeHtml(parentSubCrumb)}</span>`:''}</div>` : ''}
@@ -1283,12 +1541,19 @@ function drillInto(nodeId){
   render();
 }
 
+const itemFieldSaveTimers = {};
 function updateItemField(nodeId, field, value){
   const shelf = findShelf(state.shelfId);
   const {nodes} = resolvePath(shelf, state.path);
   const node = nodes.find(n=>String(n.id)===String(nodeId));
   if(node) node[field] = value;
   // intentionally no render() here so the field doesn't lose focus while typing
+
+  const timerKey = nodeId + ':' + field;
+  clearTimeout(itemFieldSaveTimers[timerKey]);
+  itemFieldSaveTimers[timerKey] = setTimeout(()=>{
+    dbUpdateNode(nodeId, { [field]: value });
+  }, 400);
 }
 
 function toggleShelfEditing(){
@@ -1300,7 +1565,10 @@ function toggleShelfEditing(){
       const n = nodes[i];
       if(n.type==='item'){
         const blank = !(n.name||'').trim() && !(n.note||'').trim() && !(n.link||'').trim();
-        if(blank) nodes.splice(i,1);
+        if(blank){
+          nodes.splice(i,1);
+          dbDeleteNode(n.id);
+        }
       }
     }
     state.editing = false;
@@ -1311,15 +1579,17 @@ function toggleShelfEditing(){
   render();
 }
 
-function quickAddItem(){
+async function quickAddItem(){
   const shelf = findShelf(state.shelfId);
   const {nodes} = resolvePath(shelf, state.path);
-  const newId = Date.now();
-  nodes.push({id:newId, type:'item', name:'', note:'', link:''});
+  const parentId = state.path.length ? state.path[state.path.length-1] : null;
+  const row = await dbInsertNode({ shelfId: shelf.id, parentId, type:'item', name:'', sortOrder: nodes.length });
+  if(!row){ alert('Could not add that — check your Supabase connection.'); return; }
+  nodes.push({id:row.id, type:'item', name:'', note:'', link:''});
   state.editing = true;
   render();
   requestAnimationFrame(()=>{
-    const el = document.querySelector(`[data-name-for="${newId}"]`);
+    const el = document.querySelector(`[data-name-for="${row.id}"]`);
     if(el) el.focus();
   });
 }
@@ -1353,20 +1623,31 @@ function deleteItem(id){
   const idx = nodes.findIndex(n=>String(n.id)===String(id));
   if(idx>-1) nodes.splice(idx,1);
   render();
+  dbDeleteNode(id);
 }
 
+const nodeNameSaveTimers = {};
 function updateGroupName(nodeId, value){
   const shelf = findShelf(state.shelfId);
   const {nodes} = resolvePath(shelf, state.path);
   const node = nodes.find(n=>String(n.id)===String(nodeId));
   if(node) node.name = value;
   // intentionally no render() here so the input doesn't lose focus while typing
+
+  // Debounce the Supabase write so we're not firing one per keystroke.
+  clearTimeout(nodeNameSaveTimers[nodeId]);
+  nodeNameSaveTimers[nodeId] = setTimeout(()=>{
+    dbUpdateNode(nodeId, { name: value });
+  }, 400);
 }
 
-function addGroupRow(){
+async function addGroupRow(){
   const shelf = findShelf(state.shelfId);
   const {nodes} = resolvePath(shelf, state.path);
-  nodes.push({ id:'g'+Date.now()+Math.random().toString(36).slice(2,6), type:'group', name:'', children:[] });
+  const parentId = state.path.length ? state.path[state.path.length-1] : null;
+  const row = await dbInsertNode({ shelfId: shelf.id, parentId, type:'group', name:'', sortOrder: nodes.length });
+  if(!row){ alert('Could not add that — check your Supabase connection.'); return; }
+  nodes.push({ id: row.id, type:'group', name:'', children:[] });
   render();
 }
 
@@ -1384,6 +1665,7 @@ function deleteGroupRow(nodeId){
   }
   nodes.splice(idx,1);
   render();
+  dbDeleteNode(nodeId); // cascade deletes its children/items too
 }
 
 /* =====================================================
@@ -1454,7 +1736,7 @@ function render(){
    out casual visitors, not appropriate for sensitive data.
 ===================================================== */
 const SITE_PASSWORD = 'shelby'; // <-- change this to whatever you want
-const PRIVATE_SHELF_PASSWORD = 'private2026'; // <-- separate password for shelves marked Private
+const PRIVATE_SHELF_PASSWORD = 'secrets'; // <-- separate password for shelves marked Private
 const AUTH_STORAGE_KEY = 'shelved_unlocked';
 
 function checkSitePassword(){
@@ -1472,7 +1754,11 @@ function checkSitePassword(){
 
 function unlockSite(){
   document.getElementById('passwordGate').classList.add('hidden');
-  render();
+  document.getElementById('app').innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; height:100%; font-family:sans-serif; color:#84696D;">
+      Loading your shelves…
+    </div>`;
+  loadDataFromSupabase();
 }
 
 if(localStorage.getItem(AUTH_STORAGE_KEY) === 'true'){
