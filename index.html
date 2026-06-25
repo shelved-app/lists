@@ -1615,8 +1615,8 @@ function renderShelf(){
             </button>
           </span>
         ` : `<span class="count-badges">
-          <span class="badge filled">${direct}</span>
-          <span class="badge outline">${total}</span>
+          <span class="badge filled" style="background:${shelf.color}; color:${textColorFor(shelf.color)};">${direct}</span>
+          <span class="badge outline" style="border-color:${shelf.color};">${total}</span>
         </span>`}
       </div>
     </div>
