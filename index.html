@@ -1766,23 +1766,6 @@ if(localStorage.getItem(AUTH_STORAGE_KEY) === 'true'){
 } else {
   document.getElementById('passwordGate').style.display = 'flex';
 }
-
-// iOS Safari can leave the layout height stale after the on-screen keyboard
-// shows/hides while editing a contenteditable field, which can lock the
-// list area at a height that no longer matches the real viewport (so it
-// stops scrolling). Force a reflow by nudging #app's height whenever the
-// visual viewport changes.
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize', ()=>{
-    const app = document.getElementById('app');
-    if(!app) return;
-    // Skip this while the Build a Shelf sheet is open — forcing #app's
-    // height here was fighting with the keyboard's own native scroll
-    // behavior on that screen and made fields harder to see, not easier.
-    if(state.showBuildSheet || state.buildClosing) return;
-    app.style.height = window.visualViewport.height + 'px';
-  });
-}
 </script>
 </body>
 </html>
