@@ -432,6 +432,7 @@
     color:var(--dark-text); background:transparent; display:flex;align-items:center;justify-content:center;
     flex-shrink:0; cursor:pointer; font-size:14px; line-height:1; padding:0;
   }
+  .add-circle.is-linked{ background:var(--dark-text); color:var(--white); }
   .cat-text-input{
     flex:1; border:none; border-bottom:1.5px solid rgba(16,5,7,0.5);
     background:transparent; font-family:var(--font-sans); font-size:16pt; font-weight:500;
@@ -551,6 +552,40 @@
   a{ color:inherit; }
   ::-webkit-scrollbar{ display:none; }
 
+  .link-picker-overlay{
+    position:fixed; inset:0; z-index:1200;
+    background:var(--background);
+    display:flex; flex-direction:column;
+  }
+  .link-picker-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: max(20px, env(safe-area-inset-top)) var(--side) 14px;
+    border-bottom:1px solid var(--dark-text);
+    flex-shrink:0;
+  }
+  .link-picker-title{
+    font-family:var(--font-sans); font-weight:600; font-size:15px; color:var(--dark-text);
+    flex:1; text-align:center; padding:0 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .link-picker-sheet{ flex:1; display:flex; flex-direction:column; min-height:0; }
+  .link-picker-body{ flex:1; overflow-y:auto; padding:16px var(--side) 100px; }
+  .link-picker-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--sand);
+    border-radius:999px;
+    padding:16px 22px;
+    margin-bottom:8px;
+    cursor:pointer;
+    font-family:var(--font-sans); font-size:16px; font-weight:600; color:var(--dark-text);
+  }
+  .link-picker-row .material-icon{ font-size:18px; color:var(--text-alt); }
+  .link-picker-confirm{
+    position:fixed; left:var(--side); right:var(--side); bottom: calc(20px + env(safe-area-inset-bottom));
+    background:var(--dark-text); color:var(--white);
+    border:none; border-radius:999px; padding:16px 22px;
+    font-family:var(--font-sans); font-size:16px; font-weight:600; cursor:pointer;
+  }
+
   .password-gate{
     position:fixed; inset:0;
     background:var(--background);
@@ -629,6 +664,16 @@
     <div id="privateGateError" class="password-gate-error hidden">Incorrect password. Try again.</div>
     <button class="password-gate-btn" onclick="checkPrivateShelfPassword()">Unlock</button>
     <button class="password-gate-cancel" onclick="closePrivateGate()">Cancel</button>
+  </div>
+</div>
+<div id="linkPickerModal" class="link-picker-overlay hidden">
+  <div class="link-picker-sheet">
+    <div class="link-picker-header">
+      <button class="circle-btn" id="linkPickerBack" onclick="linkPickerGoBack()"><span class="material-icon">arrow_back</span></button>
+      <div class="link-picker-title" id="linkPickerTitle">Link to a category</div>
+      <button class="circle-btn" onclick="closeLinkPicker()"><span class="material-icon">close</span></button>
+    </div>
+    <div class="link-picker-body" id="linkPickerBody"></div>
   </div>
 </div>
 <div id="app"></div>
@@ -740,11 +785,6 @@ async function loadDataFromSupabase(){
     nodesByParent[key].push(row);
   });
 
-  function buildChildren(node){
-    const children = nodesByParent[node.id] || [];
-    return children.map(row => toLocalNode(row));
-  }
-
   function toLocalNode(row){
     const local = { id: row.id, type: row.type, name: row.name };
     if(row.type === 'item'){
@@ -752,6 +792,9 @@ async function loadDataFromSupabase(){
       local.link = row.link || '';
     } else {
       local.children = [];
+      if(row.linked_node_id){
+        local.linkTargetId = row.linked_node_id;
+      }
     }
     return local;
   }
@@ -763,6 +806,18 @@ async function loadDataFromSupabase(){
     if(row.type === 'group'){
       const kids = nodesByParent[row.id] || [];
       allLocalById[row.id].children = kids.map(r => allLocalById[r.id]);
+    }
+  });
+
+  // Third pass: any node that links to another node shares that node's
+  // *exact same* children array (not a copy) — so adding/removing/editing
+  // an item through the link instantly shows up wherever else it's linked
+  // from too, since it's literally the same in-memory array either way.
+  nodeRows.forEach(row => {
+    if(row.linked_node_id && allLocalById[row.linked_node_id]){
+      allLocalById[row.id].children = allLocalById[row.linked_node_id].children;
+      const targetRow = nodeRows.find(r=>r.id===row.linked_node_id);
+      if(targetRow) allLocalById[row.id].linkTargetShelfId = targetRow.shelf_id;
     }
   });
 
@@ -1081,6 +1136,120 @@ function endNodeDrag(e){
   nodeDragState = null;
 }
 
+/* =====================================================
+   LINK PICKER — choose a category from any shelf to link to
+===================================================== */
+let linkPicker = { shelfId:null, path:[] };
+let linkPickerOnConfirm = null;
+
+function openLinkPicker(onConfirm){
+  linkPicker = { shelfId:null, path:[] };
+  linkPickerOnConfirm = onConfirm;
+  document.getElementById('linkPickerModal').classList.remove('hidden');
+  renderLinkPicker();
+}
+
+function closeLinkPicker(){
+  document.getElementById('linkPickerModal').classList.add('hidden');
+  linkPickerOnConfirm = null;
+}
+
+function linkPickerGoBack(){
+  if(linkPicker.path.length){ linkPicker.path.pop(); }
+  else if(linkPicker.shelfId){ linkPicker.shelfId = null; }
+  else { closeLinkPicker(); return; }
+  renderLinkPicker();
+}
+
+function linkPickerPickShelf(shelfId){
+  linkPicker.shelfId = shelfId;
+  linkPicker.path = [];
+  renderLinkPicker();
+}
+
+function linkPickerDrillInto(nodeId){
+  linkPicker.path.push(nodeId);
+  renderLinkPicker();
+}
+
+function linkPickerConfirm(nodeId, nodeName){
+  if(linkPickerOnConfirm) linkPickerOnConfirm(nodeId, nodeName, linkPicker.shelfId);
+  closeLinkPicker();
+}
+
+function renderLinkPicker(){
+  const backBtn = document.getElementById('linkPickerBack');
+  const titleEl = document.getElementById('linkPickerTitle');
+  const bodyEl = document.getElementById('linkPickerBody');
+
+  if(!linkPicker.shelfId){
+    titleEl.textContent = 'Choose a shelf';
+    backBtn.style.visibility = 'hidden';
+    bodyEl.innerHTML = DB.shelves.filter(s=>!s.private || s.id===state.shelfId).map(s=>`
+      <div class="link-picker-row" onclick="linkPickerPickShelf('${s.id}')">
+        ${escapeHtml(s.name)} <span class="material-icon">chevron_right</span>
+      </div>
+    `).join('') || `<div class="empty-state">No shelves yet.</div>`;
+    return;
+  }
+
+  backBtn.style.visibility = 'visible';
+  const shelf = findShelf(linkPicker.shelfId);
+  const {nodes, trail} = resolvePath(shelf, linkPicker.path);
+  titleEl.textContent = trail.length ? trail[trail.length-1].name : shelf.name;
+
+  const groups = nodes.filter(n=>n.type==='group');
+  let html = groups.map(n=>`
+    <div class="link-picker-row" onclick="linkPickerDrillInto('${n.id}')">
+      ${escapeHtml(n.name)} <span class="material-icon">chevron_right</span>
+    </div>
+  `).join('');
+
+  // Let the user link to whatever level they've drilled into, as long as
+  // it's a real group with its own content (not itself a link, to avoid
+  // chained/circular links).
+  if(trail.length){
+    const current = trail[trail.length-1];
+    if(!current.linkTargetId){
+      html += `<button class="link-picker-confirm" onclick="linkPickerConfirm('${current.id}', '${escapeHtml(current.name).replace(/'/g,"\\'")}')">Link to "${escapeHtml(current.name)}"</button>`;
+    }
+  }
+
+  bodyEl.innerHTML = html || `<div class="empty-state">Nothing here to link to.</div>`;
+}
+
+function startLinkForNode(nodeId){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const node = nodes.find(n=>String(n.id)===String(nodeId));
+  if(!node) return;
+  if(!node.linkTargetId && node.children && node.children.length>0){
+    const ok = confirm(`"${node.name||'This category'}" already has content in it. Linking it to another category will hide its current content here (it won't be deleted, just no longer shown through this category). Continue?`);
+    if(!ok) return;
+  }
+  openLinkPicker((targetId, targetName, targetShelfId)=>{
+    applyLinkToNode(nodeId, targetId, targetShelfId);
+  });
+}
+
+async function applyLinkToNode(nodeId, targetId, targetShelfId){
+  if(String(nodeId)===String(targetId)){ alert("A category can't link to itself."); return; }
+  const target = findNodeAnywhere(targetId);
+  if(!target){ alert('Could not find that category.'); return; }
+
+  await dbUpdateNode(nodeId, { linked_node_id: targetId });
+
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const node = nodes.find(n=>String(n.id)===String(nodeId));
+  if(node){
+    node.linkTargetId = targetId;
+    node.linkTargetShelfId = targetShelfId;
+    node.children = target.node.children; // same array reference — live mirror
+  }
+  render();
+}
+
 function openShelf(shelfId, path=[]){
   const shelf = findShelf(shelfId);
   if(shelf && shelf.private && isViewer()) return; // viewers can't see private shelves at all
@@ -1123,6 +1292,25 @@ function closePrivateGate(){
    HELPERS
 ===================================================== */
 function findShelf(id){ return DB.shelves.find(s=>s.id===id); }
+
+function findNodeAnywhere(nodeId){
+  for(const shelf of DB.shelves){
+    const found = findNodeInList(shelf.nodes, nodeId);
+    if(found) return { node: found, shelf };
+  }
+  return null;
+}
+
+function findNodeInList(nodes, nodeId){
+  for(const n of nodes){
+    if(String(n.id)===String(nodeId)) return n;
+    if(n.type==='group' && n.children){
+      const found = findNodeInList(n.children, nodeId);
+      if(found) return found;
+    }
+  }
+  return null;
+}
 
 function activeColorHex(d){
   return d.colorIdx==='custom' ? d.customHex : COLORS[d.colorIdx].hex;
@@ -1515,6 +1703,7 @@ function renderShelf(){
             onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.name)}</div>
           <div class="cat-row-actions">
             <button class="add-circle drag-handle" onpointerdown="startNodeDrag(event,'${n.id}')"><span class="material-icon" style="font-size:14px;">drag_indicator</span></button>
+            <button class="add-circle ${n.linkTargetId?'is-linked':''}" onclick="startLinkForNode('${n.id}')" title="${n.linkTargetId?'Linked — tap to change':'Link to another category'}"><span class="material-icon" style="font-size:14px;${n.linkTargetId?` font-variation-settings:'FILL' 1;`:''}">link</span></button>
             <button class="add-circle" onclick="deleteGroupRow('${n.id}')">−</button>
             <button class="add-circle" onclick="addGroupRow()">+</button>
           </div>
@@ -1539,12 +1728,12 @@ function renderShelf(){
       bodyHtml = `<div class="empty-state">Nothing here yet.</div>`;
     } else if(atRoot){
       // root: simple serif rows (e.g. cities)
-      bodyHtml = nodes.map(n=>`<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)}</div>`).join('');
+      bodyHtml = nodes.map(n=>`<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)}${n.linkTargetId?` <span class="material-icon" style="font-size:14px; color:var(--text-alt); vertical-align:middle;">link</span>`:''}</div>`).join('');
     } else {
       // nested groups: bold sans rows (e.g. categories)
       bodyHtml = nodes.map(n=>{
         const c = countAll(n.children||[]);
-        return `<div class="cat-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)} <span class="count">(${c})</span></div>`;
+        return `<div class="cat-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)} <span class="count">(${c})</span>${n.linkTargetId?` <span class="material-icon" style="font-size:13px; color:var(--text-alt); vertical-align:middle;">link</span>`:''}</div>`;
       }).join('');
     }
   } else {
@@ -1680,9 +1869,11 @@ function toggleShelfEditing(){
 
 async function quickAddItem(){
   const shelf = findShelf(state.shelfId);
-  const {nodes} = resolvePath(shelf, state.path);
-  const parentId = state.path.length ? state.path[state.path.length-1] : null;
-  const row = await dbInsertNode({ shelfId: shelf.id, parentId, type:'item', name:'', sortOrder: nodes.length });
+  const {nodes, trail} = resolvePath(shelf, state.path);
+  const parentNode = trail.length ? trail[trail.length-1] : null;
+  const effectiveParentId = parentNode ? (parentNode.linkTargetId || parentNode.id) : null;
+  const effectiveShelfId = (parentNode && parentNode.linkTargetShelfId) ? parentNode.linkTargetShelfId : shelf.id;
+  const row = await dbInsertNode({ shelfId: effectiveShelfId, parentId: effectiveParentId, type:'item', name:'', sortOrder: nodes.length });
   if(!row){ alert('Could not add that — check your Supabase connection.'); return; }
   nodes.push({id:row.id, type:'item', name:'', note:'', link:''});
   state.editing = true;
@@ -1742,9 +1933,11 @@ function updateGroupName(nodeId, value){
 
 async function addGroupRow(){
   const shelf = findShelf(state.shelfId);
-  const {nodes} = resolvePath(shelf, state.path);
-  const parentId = state.path.length ? state.path[state.path.length-1] : null;
-  const row = await dbInsertNode({ shelfId: shelf.id, parentId, type:'group', name:'', sortOrder: nodes.length });
+  const {nodes, trail} = resolvePath(shelf, state.path);
+  const parentNode = trail.length ? trail[trail.length-1] : null;
+  const effectiveParentId = parentNode ? (parentNode.linkTargetId || parentNode.id) : null;
+  const effectiveShelfId = (parentNode && parentNode.linkTargetShelfId) ? parentNode.linkTargetShelfId : shelf.id;
+  const row = await dbInsertNode({ shelfId: effectiveShelfId, parentId: effectiveParentId, type:'group', name:'', sortOrder: nodes.length });
   if(!row){ alert('Could not add that — check your Supabase connection.'); return; }
   nodes.push({ id: row.id, type:'group', name:'', children:[] });
   render();
@@ -1757,7 +1950,10 @@ function deleteGroupRow(nodeId){
   if(idx===-1) return;
   const node = nodes[idx];
   const childCount = (node.children||[]).length;
-  if(childCount>0){
+  if(node.linkTargetId){
+    const ok = confirm(`Remove this link to "${node.name||'that category'}"? This only removes the link here — the actual content stays exactly where it lives.`);
+    if(!ok) return;
+  } else if(childCount>0){
     const noun = childCount===1 ? 'item or subcategory' : 'items or subcategories';
     const ok = confirm(`"${node.name||'This category'}" still has ${childCount} ${noun} inside. Deleting it will remove everything inside as well. Continue?`);
     if(!ok) return;
