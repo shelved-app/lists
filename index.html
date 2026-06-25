@@ -337,7 +337,7 @@
   .home-edit-icon-btn .material-icon{ font-size:20px; }
   .drag-handle{ cursor:grab; touch-action:none; }
   .drag-handle.drag-disabled{ opacity:.35; cursor:not-allowed; }
-  .shelf-card.dragging{
+  .shelf-card.dragging, .cat-input-row.dragging, .item-card.dragging{
     box-shadow:0 8px 20px rgba(0,0,0,0.25);
     transition:none !important;
   }
@@ -988,6 +988,97 @@ function endShelfDrag(e){
   dragState = null;
 }
 
+/* =====================================================
+   NODE DRAG-TO-REORDER (categories, subcategories, items)
+   Generic version of the shelf drag logic above, operating on
+   whatever the current level's `nodes` array is.
+===================================================== */
+let nodeDragState = null;
+
+function startNodeDrag(e, nodeId){
+  e.preventDefault();
+  const row = document.querySelector(`[data-node-id="${nodeId}"]`);
+  if(!row) return;
+  const listArea = row.closest('.list-area') || row.parentElement;
+  nodeDragState = {
+    nodeId,
+    row,
+    listArea,
+    startY: e.clientY,
+  };
+  row.classList.add('dragging');
+  row.style.position = 'relative';
+  row.style.zIndex = '10';
+  document.addEventListener('pointermove', onNodeDragMove);
+  document.addEventListener('pointerup', endNodeDrag);
+  document.addEventListener('pointercancel', endNodeDrag);
+}
+
+function onNodeDragMove(e){
+  if(!nodeDragState) return;
+  const deltaY = e.clientY - nodeDragState.startY;
+  nodeDragState.row.style.transform = `translateY(${deltaY}px)`;
+
+  const siblings = Array.from(nodeDragState.listArea.querySelectorAll('[data-node-id]'));
+  const draggedRect = nodeDragState.row.getBoundingClientRect();
+  const draggedMid = draggedRect.top + draggedRect.height/2;
+
+  for(const sib of siblings){
+    if(sib === nodeDragState.row) continue;
+    const rect = sib.getBoundingClientRect();
+    const sibMid = rect.top + rect.height/2;
+    const draggedIndex = siblings.indexOf(nodeDragState.row);
+    const sibIndex = siblings.indexOf(sib);
+
+    if(draggedIndex < sibIndex && draggedMid > sibMid){
+      swapNodes(nodeDragState.nodeId, sib.dataset.nodeId);
+      nodeDragState.row.style.transform = 'translateY(0px)';
+      nodeDragState.startY = e.clientY;
+      break;
+    } else if(draggedIndex > sibIndex && draggedMid < sibMid){
+      swapNodes(nodeDragState.nodeId, sib.dataset.nodeId);
+      nodeDragState.row.style.transform = 'translateY(0px)';
+      nodeDragState.startY = e.clientY;
+      break;
+    }
+  }
+}
+
+function swapNodes(idA, idB){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const indexA = nodes.findIndex(n=>String(n.id)===String(idA));
+  const indexB = nodes.findIndex(n=>String(n.id)===String(idB));
+  if(indexA===-1 || indexB===-1) return;
+  [nodes[indexA], nodes[indexB]] = [nodes[indexB], nodes[indexA]];
+
+  dbUpdateNode(idA, { sort_order: indexB });
+  dbUpdateNode(idB, { sort_order: indexA });
+
+  const saved = nodeDragState;
+  render();
+  const newRow = document.querySelector(`[data-node-id="${saved.nodeId}"]`);
+  if(newRow){
+    newRow.classList.add('dragging');
+    newRow.style.position = 'relative';
+    newRow.style.zIndex = '10';
+    nodeDragState.row = newRow;
+    nodeDragState.listArea = newRow.closest('.list-area') || newRow.parentElement;
+  }
+}
+
+function endNodeDrag(e){
+  if(!nodeDragState) return;
+  nodeDragState.row.classList.remove('dragging');
+  nodeDragState.row.style.transform = '';
+  nodeDragState.row.style.position = '';
+  nodeDragState.row.style.zIndex = '';
+  document.removeEventListener('pointermove', onNodeDragMove);
+  document.removeEventListener('pointerup', endNodeDrag);
+  document.removeEventListener('pointercancel', endNodeDrag);
+  nodeDragState = null;
+}
+
 function openShelf(shelfId, path=[]){
   const shelf = findShelf(shelfId);
   if(shelf && shelf.private && !state.unlockedPrivateShelves.has(shelfId)){
@@ -1413,11 +1504,12 @@ function renderShelf(){
       listClass += ' with-side-pad';
       // editable rows: underline contenteditable div + minus/plus circles, matching Build a Shelf category editor
       bodyHtml = nodes.map(n=>`
-        <div class="cat-input-row${atRoot?'':' sub-level'}">
+        <div class="cat-input-row${atRoot?'':' sub-level'}" data-node-id="${n.id}">
           <div class="cat-text-input${atRoot?'':' sub-level'}" contenteditable="true" data-placeholder="${atRoot?'Category':'Subcategory'}"
             oninput="updateGroupName('${n.id}', this.textContent)"
             onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.name)}</div>
           <div class="cat-row-actions">
+            <button class="add-circle drag-handle" onpointerdown="startNodeDrag(event,'${n.id}')"><span class="material-icon" style="font-size:14px;">drag_indicator</span></button>
             <button class="add-circle" onclick="deleteGroupRow('${n.id}')">−</button>
             <button class="add-circle" onclick="addGroupRow()">+</button>
           </div>
@@ -1457,19 +1549,20 @@ function renderShelf(){
         <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
       </div>` + `<div class="empty-state">Nothing here yet.</div>`;
     } else {
-      const newestFirst = [...nodes].reverse();
+      const displayOrder = [...nodes].reverse();
       bodyHtml = `<div class="add-item-row" onclick="quickAddItem()">
         <span>Add Item</span>
         <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
-      </div>` + newestFirst.map(n=>{
+      </div>` + displayOrder.map(n=>{
         if(state.editing){
           return `
-            <div class="item-card editing-fields">
+            <div class="item-card editing-fields" data-node-id="${n.id}">
               <div class="item-edit-top">
                 <div class="item-name-input" contenteditable="true" data-placeholder="Item name" data-name-for="${n.id}"
                   oninput="updateItemField('${n.id}','name',this.textContent)"
                   onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.name)}</div>
                 <div class="cat-row-actions">
+                  <button class="add-circle drag-handle" onpointerdown="startNodeDrag(event,'${n.id}')"><span class="material-icon" style="font-size:14px;">drag_indicator</span></button>
                   <button class="add-circle" onclick="deleteItem('${n.id}')">−</button>
                   <button class="add-circle" onclick="quickAddItem()">+</button>
                 </div>
