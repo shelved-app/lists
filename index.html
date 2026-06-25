@@ -852,6 +852,7 @@ function go(screen, extra={}){
 }
 
 function toggleHomeEditing(){
+  if(isViewer()) return;
   state.homeEditing = !state.homeEditing;
   state.homeEditJustToggled = true;
   render();
@@ -1082,6 +1083,7 @@ function endNodeDrag(e){
 
 function openShelf(shelfId, path=[]){
   const shelf = findShelf(shelfId);
+  if(shelf && shelf.private && isViewer()) return; // viewers can't see private shelves at all
   if(shelf && shelf.private && !state.unlockedPrivateShelves.has(shelfId)){
     state.pendingPrivateShelfId = shelfId;
     state.pendingPrivateShelfPath = path;
@@ -1198,13 +1200,14 @@ function formatShortDate(longStr){
 function renderHome(){
   const tab = state.homeTab;
   const homeQuery = state.search.trim().toLowerCase();
+  const visibleShelves = isViewer() ? DB.shelves.filter(s=>!s.private) : DB.shelves;
 
   let rows;
   if(homeQuery){
     // Global search across every shelf, showing individual matches (items or
     // categories/groups) with a full breadcrumb, rather than just shelf cards.
     let results = [];
-    DB.shelves.forEach(s=>{
+    visibleShelves.forEach(s=>{
       if(s.name.toLowerCase().includes(homeQuery)){
         results.push({ shelf:s, node:{name:s.name, type:'shelf'}, trailNames:[], trailIds:[] });
       }
@@ -1224,7 +1227,7 @@ function renderHome(){
         </div>`;
     }).join('') || `<div class="empty-state">No results for "${escapeHtml(state.search.trim())}"</div>`;
   } else {
-    let shelves = DB.shelves;
+    let shelves = visibleShelves;
     if(tab==='favorites') shelves = shelves.filter(s=>s.favorite);
     if(tab==='recents') shelves = [...shelves].sort((a,b)=> (a.updated<b.updated?1:-1)).slice(0,5);
 
@@ -1284,7 +1287,7 @@ function renderHome(){
     <path d="M98.86.17c-3.39,0-6.04,2.63-6.04,5.98s2.6,5.98,6.04,5.98,5.98-2.57,5.98-5.98S102.27.17,98.86.17ZM98.86,10.71c-2.63,0-4.54-1.92-4.54-4.56s1.95-4.56,4.54-4.56,4.48,1.92,4.48,4.56-1.88,4.56-4.48,4.56Z"/>
   </g>
 </svg></h1>
-        <button class="pill-btn" onclick="toggleHomeEditing()">${state.homeEditing?'Done':'Edit'}</button>
+        ${isViewer() ? '' : `<button class="pill-btn" onclick="toggleHomeEditing()">${state.homeEditing?'Done':'Edit'}</button>`}
       </div>
       <div class="tab-stack">
         <button class="${tab==='favorites'?'active':''}" onclick="state.homeTab='favorites'; render()">Favorites</button>
@@ -1296,7 +1299,7 @@ function renderHome(){
     <div class="list-area" style="padding-top:18px;">${rows}</div>
     <div class="bottom-bar">
       <input id="searchInput" class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
-      <button class="add-btn-circle home-add-circle" onclick="openBuildSheet()">+</button>
+      ${isViewer() ? '' : `<button class="add-btn-circle home-add-circle" onclick="openBuildSheet()">+</button>`}
     </div>
   `;
 }
@@ -1305,6 +1308,7 @@ function renderHome(){
    BUILD A SHELF — overlay sheet (slides over home only)
 ===================================================== */
 function openBuildSheet(){
+  if(isViewer()) return;
   state.showBuildSheet = true;
   state.buildJustOpened = true;
   state.buildClosing = false;
@@ -1600,7 +1604,7 @@ function renderShelf(){
       </div>
       <!-- Date intentionally hidden from UI; shelf.updated is still stored and formatted via formatShortDate() if needed later -->
       <span class="title-center hidden"></span>
-      <button class="pill-btn" onclick="toggleShelfEditing()">${state.editing?'Done':'Edit'}</button>
+      ${isViewer() ? '' : `<button class="pill-btn" onclick="toggleShelfEditing()">${state.editing?'Done':'Edit'}</button>`}
     </div>
     <div class="crumb-row">
       <div class="crumb-title">
@@ -1624,7 +1628,7 @@ function renderShelf(){
     <div id="shelfListArea" class="${listClass}${justToggledEdit?' rows-slide-container':''}" style="padding-top:${parentCrumb ? '14' : '22'}px;">${bodyHtml}</div>
     <div class="bottom-bar">
       <input id="searchInput" class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
-      <button class="add-btn-circle" onclick="openBuildSheet()">+</button>
+      ${isViewer() ? '' : `<button class="add-btn-circle" onclick="openBuildSheet()">+</button>`}
     </div>
   `;
 }
@@ -1651,6 +1655,7 @@ function updateItemField(nodeId, field, value){
 }
 
 function toggleShelfEditing(){
+  if(isViewer()) return;
   if(state.editing){
     // leaving edit mode ("Done") — clean up any item the user added but never filled in
     const shelf = findShelf(state.shelfId);
@@ -1780,6 +1785,11 @@ function render(){
   const existingFormArea = document.querySelector('.sheet-panel .form-area');
   const formScrollTop = existingFormArea ? existingFormArea.scrollTop : 0;
 
+  // Same for the main list area — drag-to-reorder calls render() on every
+  // swap mid-drag, which would otherwise reset scroll to the top each time.
+  const existingListArea = document.querySelector('.list-area');
+  const listScrollTop = existingListArea ? existingListArea.scrollTop : 0;
+
   let html = '';
   if(state.screen==='home') html = renderHome();
   else if(state.screen==='shelf') html = renderShelf();
@@ -1794,6 +1804,9 @@ function render(){
       }
     }
   }
+
+  const newListArea = document.querySelector('.list-area');
+  if(newListArea) newListArea.scrollTop = listScrollTop;
 
   if(state.showBuildSheet || state.buildClosing){
     mountBuildSheet();
@@ -1830,13 +1843,25 @@ function render(){
    out casual visitors, not appropriate for sensitive data.
 ===================================================== */
 const SITE_PASSWORD = 'shelby'; // <-- change this to whatever you want
+const VIEWER_PASSWORD = 'guest'; // <-- give this one out to people who should only browse, not edit
 const PRIVATE_SHELF_PASSWORD = 'secrets'; // <-- separate password for shelves marked Private
 const AUTH_STORAGE_KEY = 'shelved_unlocked';
+const ROLE_STORAGE_KEY = 'shelved_role'; // 'owner' or 'viewer'
+
+let userRole = localStorage.getItem(ROLE_STORAGE_KEY) || 'owner';
+function isViewer(){ return userRole === 'viewer'; }
 
 function checkSitePassword(){
   const input = document.getElementById('passwordInput');
   const errorEl = document.getElementById('passwordGateError');
   if(input.value === SITE_PASSWORD){
+    userRole = 'owner';
+    localStorage.setItem(ROLE_STORAGE_KEY, 'owner');
+    localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+    unlockSite();
+  } else if(input.value === VIEWER_PASSWORD){
+    userRole = 'viewer';
+    localStorage.setItem(ROLE_STORAGE_KEY, 'viewer');
     localStorage.setItem(AUTH_STORAGE_KEY, 'true');
     unlockSite();
   } else {
