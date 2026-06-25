@@ -264,7 +264,7 @@
   .item-name-input{
     flex:1; border:none; border-bottom:1.5px solid rgba(16,5,7,0.5);
     background:transparent; color:var(--dark-text); outline:none;
-    font-family:var(--font-sans); font-size:15px; font-weight:700; line-height:20px;
+    font-family:var(--font-sans); font-size:16px; font-weight:700; line-height:20px;
     padding:0 0 4px;
   }
   .item-name-input:empty:before{
@@ -272,8 +272,8 @@
     color:var(--text-alt); font-weight:700;
   }
   .item-note-input{
-    font-family:var(--font-sans); font-size:14px; font-weight:500; color:var(--dark-text);
-    line-height:17pt;
+    font-family:var(--font-sans); font-size:16px; font-weight:500; color:var(--dark-text);
+    line-height:19px;
     outline:none; white-space:pre-wrap; word-break:break-word;
     margin-bottom:10px; min-height:18px;
   }
@@ -286,7 +286,7 @@
   }
   .item-link-row .link-icon{ font-size:15px; color:var(--text-alt); flex-shrink:0; }
   .item-link-input{
-    font-family:var(--font-sans); font-size:13px; font-weight:500; color:var(--text-alt);
+    font-family:var(--font-sans); font-size:16px; font-weight:500; color:var(--text-alt);
     outline:none; flex:1; white-space:nowrap; overflow:hidden;
   }
   .item-link-input:empty:before{
@@ -440,6 +440,7 @@
     outline:none; color:var(--dark-text);
     white-space:nowrap; overflow:hidden;
   }
+  .cat-text-input.build-cat-input{ font-size:12pt; }
   .cat-text-input:empty:before{
     content: attr(data-placeholder);
     color:var(--text-alt); font-weight:500;
@@ -476,7 +477,7 @@
     background:var(--sand);
     border-radius:999px;
     padding:14px 22px;
-    font-family:var(--font-sans); font-size:15px; font-weight:500;
+    font-family:var(--font-sans); font-size:16px; font-weight:500;
     color:var(--dark-text);
   }
   .search-input::placeholder{ color:var(--text-alt); }
@@ -1337,7 +1338,7 @@ function buildSheetInnerHtml(){
 
   const catRows = d.categories.map((c,i)=>`
     <div class="cat-input-row">
-      <input class="cat-text-input" placeholder="Category" value="${escapeHtml(c)}"
+      <input class="cat-text-input build-cat-input" placeholder="Category" value="${escapeHtml(c)}"
         oninput="state.buildDraft.categories[${i}]=this.value">
       <div class="cat-row-actions">
         ${i>0 ? `<button class="add-circle" onclick="removeCategoryRow(${i})">−</button>` : ''}
