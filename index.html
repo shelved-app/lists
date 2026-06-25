@@ -1777,8 +1777,28 @@ if(window.visualViewport){
     const app = document.getElementById('app');
     if(!app) return;
     app.style.height = window.visualViewport.height + 'px';
+    // Re-scroll whatever's currently focused into view, since the keyboard
+    // showing/hiding can otherwise leave it hidden behind the keyboard in
+    // our fixed/absolute-positioned sheet layouts.
+    const active = document.activeElement;
+    if(active && active !== document.body){
+      setTimeout(()=>{ active.scrollIntoView({ block:'center', behavior:'smooth' }); }, 50);
+    }
   });
 }
+
+// Belt-and-suspenders: whenever ANY text input or contenteditable field in
+// the app gains focus, explicitly scroll it into view. This is what
+// actually keeps the field visible above the keyboard on iOS Safari for
+// the Build a Shelf sheet and the category/item editors, which use
+// fixed/absolute positioning that the browser's default scroll-into-view
+// doesn't always handle correctly.
+document.addEventListener('focusin', (e)=>{
+  const el = e.target;
+  if(el && (el.tagName==='INPUT' || el.isContentEditable)){
+    setTimeout(()=>{ el.scrollIntoView({ block:'center', behavior:'smooth' }); }, 300);
+  }
+});
 </script>
 </body>
 </html>
