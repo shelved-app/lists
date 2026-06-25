@@ -230,7 +230,7 @@
     font-family:var(--font-sans); font-size:17px; font-weight:500; line-height:21px;
     padding:6px var(--side); cursor:pointer; color:var(--dark-text);
   }
-  .cat-row .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
+  .cat-row .count, .simple-row .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
 
   /* item card -- edge to edge, fully rounded, small gap between */
   .add-item-row{
@@ -762,18 +762,32 @@ let DB = {
 ===================================================== */
 
 async function loadDataFromSupabase(){
-  const [{ data: shelfRows, error: shelfErr }, { data: nodeRows, error: nodeErr }] = await Promise.all([
-    sb.from('shelves').select('*').order('sort_order', { ascending: true }),
-    sb.from('nodes').select('*').order('sort_order', { ascending: true }),
-  ]);
+  const { data: shelfRows, error: shelfErr } = await sb.from('shelves')
+    .select('*').eq('tenant_id', currentTenantId).order('sort_order', { ascending: true });
 
-  if(shelfErr || nodeErr){
-    console.error('Supabase load error:', shelfErr || nodeErr);
+  if(shelfErr){
+    console.error('Supabase load error:', shelfErr);
     document.getElementById('app').innerHTML = `
       <div style="padding:40px 24px; font-family:sans-serif; color:#100507;">
         <h2>Couldn't load your shelves</h2>
         <p>Check that SUPABASE_URL and SUPABASE_ANON_KEY are filled in correctly near the top of this file's &lt;script&gt; tag, and that the schema has been run in your Supabase project.</p>
-        <p style="color:#84696D; font-size:13px;">${escapeHtml((shelfErr||nodeErr).message||'')}</p>
+        <p style="color:#84696D; font-size:13px;">${escapeHtml(shelfErr.message||'')}</p>
+      </div>`;
+    return;
+  }
+
+  const shelfIds = shelfRows.map(s=>s.id);
+  const { data: nodeRows, error: nodeErr } = shelfIds.length
+    ? await sb.from('nodes').select('*').in('shelf_id', shelfIds).order('sort_order', { ascending: true })
+    : { data: [], error: null };
+
+  if(nodeErr){
+    console.error('Supabase load error:', nodeErr);
+    document.getElementById('app').innerHTML = `
+      <div style="padding:40px 24px; font-family:sans-serif; color:#100507;">
+        <h2>Couldn't load your shelves</h2>
+        <p>Check that SUPABASE_URL and SUPABASE_ANON_KEY are filled in correctly near the top of this file's &lt;script&gt; tag, and that the schema has been run in your Supabase project.</p>
+        <p style="color:#84696D; font-size:13px;">${escapeHtml(nodeErr.message||'')}</p>
       </div>`;
     return;
   }
@@ -837,6 +851,7 @@ async function loadDataFromSupabase(){
 
 async function dbInsertShelf(shelf){
   const { data, error } = await sb.from('shelves').insert({
+    tenant_id: currentTenantId,
     name: shelf.name, color: shelf.color,
     is_private: !!shelf.private, is_favorite: !!shelf.favorite,
     sort_order: DB.shelves.length,
@@ -1729,7 +1744,10 @@ function renderShelf(){
       bodyHtml = `<div class="empty-state">Nothing here yet.</div>`;
     } else if(atRoot){
       // root: simple serif rows (e.g. cities)
-      bodyHtml = nodes.map(n=>`<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)}${n.linkTargetId?` <span class="material-icon" style="font-size:14px; color:var(--text-alt); vertical-align:middle;">link</span>`:''}</div>`).join('');
+      bodyHtml = nodes.map(n=>{
+        const c = countAll(n.children||[]);
+        return `<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)} <span class="count">(${c})</span>${n.linkTargetId?` <span class="material-icon" style="font-size:14px; color:var(--text-alt); vertical-align:middle;">link</span>`:''}</div>`;
+      }).join('');
     } else {
       // nested groups: bold sans rows (e.g. categories)
       bodyHtml = nodes.map(n=>{
@@ -2038,27 +2056,40 @@ function render(){
    security — the password lives in this file's source code,
    visible to anyone who views page source. Good enough to keep
    out casual visitors, not appropriate for sensitive data.
+
+   MULTI-TENANT NOTE: each entry below is its own person, with
+   their own password, their own tenantId (which scopes which
+   shelves they see/create in Supabase), and a role ('owner' can
+   edit; 'viewer' can only browse). Everyone using ANY of these
+   passwords shares this same GitHub Pages URL and this same
+   Supabase project — the tenantId is what keeps each person's
+   shelves separate from everyone else's. To add a friend, just
+   add another line here with a new password + a new unique
+   tenantId (any short slug works, it just needs to be unique).
 ===================================================== */
-const SITE_PASSWORD = 'shelby'; // <-- change this to whatever you want
-const VIEWER_PASSWORD = 'guest'; // <-- give this one out to people who should only browse, not edit
-const PRIVATE_SHELF_PASSWORD = 'secrets'; // <-- separate password for shelves marked Private
+const TENANTS = {
+  'shelby':   { tenantId:'owner',   role:'owner'  }, // <-- you
+  'guest':    { tenantId:'owner',   role:'viewer' }, // <-- view-only access to YOUR shelves
+  // 'friendpass1': { tenantId:'friend1', role:'owner' }, // <-- example: give a friend their own
+};
+const PRIVATE_SHELF_PASSWORD = 'secrets'; // <-- separate password for shelves marked Private (shared across everyone for now)
 const AUTH_STORAGE_KEY = 'shelved_unlocked';
-const ROLE_STORAGE_KEY = 'shelved_role'; // 'owner' or 'viewer'
+const ROLE_STORAGE_KEY = 'shelved_role';
+const TENANT_STORAGE_KEY = 'shelved_tenant';
 
 let userRole = localStorage.getItem(ROLE_STORAGE_KEY) || 'owner';
+let currentTenantId = localStorage.getItem(TENANT_STORAGE_KEY) || 'owner';
 function isViewer(){ return userRole === 'viewer'; }
 
 function checkSitePassword(){
   const input = document.getElementById('passwordInput');
   const errorEl = document.getElementById('passwordGateError');
-  if(input.value === SITE_PASSWORD){
-    userRole = 'owner';
-    localStorage.setItem(ROLE_STORAGE_KEY, 'owner');
-    localStorage.setItem(AUTH_STORAGE_KEY, 'true');
-    unlockSite();
-  } else if(input.value === VIEWER_PASSWORD){
-    userRole = 'viewer';
-    localStorage.setItem(ROLE_STORAGE_KEY, 'viewer');
+  const match = TENANTS[input.value];
+  if(match){
+    userRole = match.role;
+    currentTenantId = match.tenantId;
+    localStorage.setItem(ROLE_STORAGE_KEY, match.role);
+    localStorage.setItem(TENANT_STORAGE_KEY, match.tenantId);
     localStorage.setItem(AUTH_STORAGE_KEY, 'true');
     unlockSite();
   } else {
