@@ -816,9 +816,9 @@ async function loadDataFromSupabase(){
       local.link = row.link || '';
     } else {
       local.children = [];
-      if(row.linked_node_id){
-        local.linkTargetId = row.linked_node_id;
-      }
+    }
+    if(row.linked_node_id){
+      local.linkTargetId = row.linked_node_id;
     }
     return local;
   }
@@ -839,7 +839,9 @@ async function loadDataFromSupabase(){
   // from too, since it's literally the same in-memory array either way.
   nodeRows.forEach(row => {
     if(row.linked_node_id && allLocalById[row.linked_node_id]){
-      allLocalById[row.id].children = allLocalById[row.linked_node_id].children;
+      if(row.type === 'group'){
+        allLocalById[row.id].children = allLocalById[row.linked_node_id].children;
+      }
       const targetRow = nodeRows.find(r=>r.id===row.linked_node_id);
       if(targetRow) allLocalById[row.id].linkTargetShelfId = targetRow.shelf_id;
     }
