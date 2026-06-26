@@ -1904,7 +1904,6 @@ function renderShelf(){
       // Empty level: always show the two choice pills (Edit button is hidden
       // when empty, so this can't rely on edit mode being on). Works at any
       // depth — "Add Category" at root, "Add Subcategory" when nested.
-      listClass += ' with-side-pad';
       bodyHtml = `
         <div class="empty-level-choice">
           <div class="add-item-row" onclick="addGroupRow()">
