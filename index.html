@@ -495,6 +495,10 @@
     position:fixed; inset:0; z-index:50;
     background:linear-gradient(to bottom, rgba(248,239,224,0) 0%, rgba(248,239,224,0.55) 35%, rgba(248,239,224,0.9) 70%, rgba(248,239,224,0.97) 100%);
   }
+  .add-menu-column{
+    position:absolute; top:0; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:560px;
+  }
   .add-menu-unit{
     position:absolute; right:0; bottom:0;
     background:var(--white);
@@ -509,7 +513,7 @@
   }
   .add-menu button{
     background:none; border:none; cursor:pointer; padding:0;
-    font-family:var(--font-sans); font-size:16pt; font-weight:500; line-height:27.5pt;
+    font-family:var(--font-sans); font-size:14px; font-weight:500; line-height:34px;
     color:var(--dark-text); text-align:left;
   }
   .add-menu button:active{ opacity:.6; }
@@ -718,8 +722,10 @@
   </div>
 </div>
 <div id="addMenuOverlay" class="add-menu-overlay hidden" onclick="closeAddMenu()">
-  <div class="add-menu-unit" onclick="event.stopPropagation()">
-    <div class="add-menu" id="addMenu"></div>
+  <div class="add-menu-column">
+    <div class="add-menu-unit" onclick="event.stopPropagation()">
+      <div class="add-menu" id="addMenu"></div>
+    </div>
   </div>
 </div>
 <div id="app"></div>
