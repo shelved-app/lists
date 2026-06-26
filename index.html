@@ -1969,7 +1969,7 @@ function renderShelf(){
               <div class="item-edit-top">
                 <div class="item-name-input" contenteditable="${!n.linkTargetId}" data-placeholder="Item name" data-name-for="${eff.id}"
                   oninput="updateItemField('${eff.id}','name',this.textContent)"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(eff.name)}</div>
+                  onkeydown="if(event.key==='Enter'){event.preventDefault(); itemNameEnter(event, '${eff.id}');}">${escapeHtml(eff.name)}</div>
                 <div class="cat-row-actions">
                   <button class="add-circle drag-handle" onpointerdown="startNodeDrag(event,'${n.id}')"><span class="material-icon" style="font-size:14px;">drag_indicator</span></button>
                   <button class="add-circle" onclick="deleteItem('${n.id}')">−</button>
@@ -2101,6 +2101,18 @@ async function quickAddItem(){
     const el = document.querySelector(`[data-name-for="${row.id}"]`);
     if(el) el.focus();
   });
+}
+
+// Pressing Enter (not shift+Enter) on an item's name commits what's typed
+// and immediately opens a fresh item to type into — handy for quickly
+// banging out a list (e.g. groceries) without touching notes/links.
+function itemNameEnter(event, nodeId){
+  // Make sure the latest text is saved before we re-render.
+  const el = event.target;
+  updateItemField(nodeId, 'name', el.textContent);
+  // Don't spawn a new row off a blank one — just blur instead.
+  if(!el.textContent.trim()){ el.blur(); return; }
+  quickAddItem();
 }
 
 function addGroupPrompt(){
