@@ -218,6 +218,7 @@
 
   /* simple text-link rows (cities) — styled to match the home nav items */
   .simple-row{
+    display:flex; align-items:center; gap:8px;
     font-family:var(--font-sans); font-size:16pt; line-height:24pt; font-weight:500;
     opacity:1;
     margin-bottom:4px;
@@ -226,10 +227,18 @@
 
   /* category rows (bold sans, Casual/Fancy/...) */
   .cat-row{
+    display:flex; align-items:center; gap:8px;
     font-family:var(--font-sans); font-size:17px; font-weight:500; line-height:21px;
     padding:6px var(--side); cursor:pointer; color:var(--dark-text);
   }
-  .cat-row .count, .simple-row .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
+  .count-circle{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:24px; height:24px; aspect-ratio:1; padding:0 3px;
+    border-radius:50%;
+    border:1.5px solid var(--text-alt);
+    color:var(--text-alt);
+    font-family:var(--font-sans); font-weight:600; font-size:11px;
+  }
 
   /* item card -- edge to edge, fully rounded, small gap between */
   .add-item-row{
@@ -249,6 +258,7 @@
     color:var(--text-alt); display:flex;align-items:center;justify-content:center;
     flex-shrink:0; cursor:pointer; font-size:14px;
   }
+  .add-item-row-actions{ display:flex; gap:6px; align-items:center; }
 
   .item-card{
     background:var(--sand);
@@ -1157,8 +1167,8 @@ function endNodeDrag(e){
 let linkPicker = { shelfId:null, path:[] };
 let linkPickerOnConfirm = null;
 
-function openLinkPicker(onConfirm){
-  linkPicker = { shelfId:null, path:[] };
+function openLinkPicker(onConfirm, mode='group'){
+  linkPicker = { shelfId:null, path:[], mode };
   linkPickerOnConfirm = onConfirm;
   document.getElementById('linkPickerModal').classList.remove('hidden');
   renderLinkPicker();
@@ -1188,8 +1198,13 @@ function linkPickerDrillInto(nodeId){
 }
 
 function linkPickerConfirm(nodeId, nodeName){
-  if(linkPickerOnConfirm) linkPickerOnConfirm(nodeId, nodeName, linkPicker.shelfId);
-  closeLinkPicker();
+  try{
+    if(linkPickerOnConfirm) linkPickerOnConfirm(nodeId, nodeName, linkPicker.shelfId);
+    closeLinkPicker();
+  }catch(err){
+    console.error('Link picker confirm failed:', err);
+    alert('Something went wrong selecting that: ' + err.message);
+  }
 }
 
 function renderLinkPicker(){
@@ -1220,10 +1235,21 @@ function renderLinkPicker(){
     </div>
   `).join('');
 
+  if(linkPicker.mode === 'item'){
+    const items = nodes.filter(n=>n.type==='item');
+    html += items.map(n=>{
+      if(n.linkTargetId) return ''; // don't allow linking to something that's already a link
+      return `
+        <div class="link-picker-row" onclick="linkPickerConfirm('${n.id}', '${escapeHtml(n.name).replace(/'/g,"\\'")}')">
+          ${escapeHtml(n.name)} <span class="material-icon">link</span>
+        </div>`;
+    }).join('');
+  }
+
   // Let the user link to whatever level they've drilled into, as long as
   // it's a real group with its own content (not itself a link, to avoid
   // chained/circular links).
-  if(trail.length){
+  if(linkPicker.mode === 'group' && trail.length){
     const current = trail[trail.length-1];
     if(!current.linkTargetId){
       html += `<button class="link-picker-confirm" onclick="linkPickerConfirm('${current.id}', '${escapeHtml(current.name).replace(/'/g,"\\'")}')">Link to "${escapeHtml(current.name)}"</button>`;
@@ -1231,6 +1257,38 @@ function renderLinkPicker(){
   }
 
   bodyEl.innerHTML = html || `<div class="empty-state">Nothing here to link to.</div>`;
+}
+
+function startLinkForNewItem(){
+  openLinkPicker((targetId, targetName, targetShelfId)=>{
+    createLinkedItem(targetId, targetShelfId);
+  }, 'item');
+}
+
+async function createLinkedItem(targetId, targetShelfId){
+  try{
+    const shelf = findShelf(state.shelfId);
+    const {nodes, trail} = resolvePath(shelf, state.path);
+    const parentNode = trail.length ? trail[trail.length-1] : null;
+    const effectiveParentId = parentNode ? (parentNode.linkTargetId || parentNode.id) : null;
+    const effectiveShelfId = (parentNode && parentNode.linkTargetShelfId) ? parentNode.linkTargetShelfId : shelf.id;
+
+    const row = await dbInsertNode({ shelfId: effectiveShelfId, parentId: effectiveParentId, type:'item', name:'', sortOrder: nodes.length });
+    if(!row){ alert('Could not add that — check your Supabase connection.'); return; }
+
+    const { error: linkErr } = await sb.from('nodes').update({ linked_node_id: targetId }).eq('id', row.id);
+    if(linkErr){
+      console.error('Setting linked_node_id failed:', linkErr);
+      alert('Created the item, but could not save the link itself: ' + linkErr.message + '\n\nThis usually means the "linked_node_id" column migration hasn\'t been run in Supabase yet.');
+    }
+
+    nodes.push({ id: row.id, type:'item', name:'', note:'', link:'', linkTargetId: targetId, linkTargetShelfId: targetShelfId });
+    state.editing = true;
+    render();
+  }catch(err){
+    console.error('createLinkedItem failed:', err);
+    alert('Something went wrong creating that link: ' + err.message);
+  }
 }
 
 function startLinkForNode(nodeId){
@@ -1735,7 +1793,10 @@ function renderShelf(){
           <div class="empty-level-or">or</div>
           <div class="add-item-row" onclick="quickAddItem()">
             <span>Add Item</span>
-            <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+            <div class="add-item-row-actions">
+              <button class="add-circle-outline" onclick="event.stopPropagation(); startLinkForNewItem()" title="Link to an existing item"><span class="material-icon" style="font-size:13px;">link</span></button>
+              <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+            </div>
           </div>
         </div>
       ` : '');
@@ -1745,60 +1806,70 @@ function renderShelf(){
       // root: simple serif rows (e.g. cities)
       bodyHtml = nodes.map(n=>{
         const c = countAll(n.children||[]);
-        return `<div class="simple-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)} <span class="count">(${c})</span>${n.linkTargetId?` <span class="material-icon" style="font-size:14px; color:var(--text-alt); vertical-align:middle;">link</span>`:''}</div>`;
+        return `<div class="simple-row" onclick="drillInto('${n.id}')"><span>${escapeHtml(n.name)}</span><span class="count-circle">${c}</span>${n.linkTargetId?`<span class="material-icon" style="font-size:14px; color:var(--text-alt);">link</span>`:''}</div>`;
       }).join('');
     } else {
       // nested groups: bold sans rows (e.g. categories)
       bodyHtml = nodes.map(n=>{
         const c = countAll(n.children||[]);
-        return `<div class="cat-row" onclick="drillInto('${n.id}')">${escapeHtml(n.name)} <span class="count">(${c})</span>${n.linkTargetId?` <span class="material-icon" style="font-size:13px; color:var(--text-alt); vertical-align:middle;">link</span>`:''}</div>`;
+        return `<div class="cat-row" onclick="drillInto('${n.id}')"><span>${escapeHtml(n.name)}</span><span class="count-circle">${c}</span>${n.linkTargetId?`<span class="material-icon" style="font-size:13px; color:var(--text-alt);">link</span>`:''}</div>`;
       }).join('');
     }
   } else {
     if(nodes.length===0){
       bodyHtml = `<div class="add-item-row" onclick="quickAddItem()">
         <span>Add Item</span>
-        <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+        <div class="add-item-row-actions">
+          <button class="add-circle-outline" onclick="event.stopPropagation(); startLinkForNewItem()" title="Link to an existing item"><span class="material-icon" style="font-size:13px;">link</span></button>
+          <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+        </div>
       </div>` + `<div class="empty-state">Nothing here yet.</div>`;
     } else {
       const displayOrder = [...nodes].reverse();
       bodyHtml = `<div class="add-item-row" onclick="quickAddItem()">
         <span>Add Item</span>
-        <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+        <div class="add-item-row-actions">
+          <button class="add-circle-outline" onclick="event.stopPropagation(); startLinkForNewItem()" title="Link to an existing item"><span class="material-icon" style="font-size:13px;">link</span></button>
+          <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+        </div>
       </div>` + displayOrder.map(n=>{
         if(state.editing){
+          const eff = n.linkTargetId ? (findNodeAnywhere(n.linkTargetId)?.node || n) : n;
           return `
             <div class="item-card editing-fields" data-node-id="${n.id}">
               <div class="item-edit-top">
-                <div class="item-name-input" contenteditable="true" data-placeholder="Item name" data-name-for="${n.id}"
-                  oninput="updateItemField('${n.id}','name',this.textContent)"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.name)}</div>
+                <div class="item-name-input" contenteditable="${!n.linkTargetId}" data-placeholder="Item name" data-name-for="${eff.id}"
+                  oninput="updateItemField('${eff.id}','name',this.textContent)"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(eff.name)}</div>
                 <div class="cat-row-actions">
                   <button class="add-circle drag-handle" onpointerdown="startNodeDrag(event,'${n.id}')"><span class="material-icon" style="font-size:14px;">drag_indicator</span></button>
                   <button class="add-circle" onclick="deleteItem('${n.id}')">−</button>
                   <button class="add-circle" onclick="quickAddItem()">+</button>
                 </div>
               </div>
-              <div class="item-note-input" contenteditable="true" data-placeholder="Add Note" data-note-for="${n.id}"
-                oninput="updateItemField('${n.id}','note',this.innerText)">${escapeHtml(n.note||'')}</div>
+              <div class="item-note-input" contenteditable="${!n.linkTargetId}" data-placeholder="Add Note" data-note-for="${eff.id}"
+                oninput="updateItemField('${eff.id}','note',this.innerText)">${escapeHtml(eff.note||'')}</div>
               <div class="item-link-row">
                 <span class="material-icon link-icon">link</span>
-                <div class="item-link-input" contenteditable="true" data-placeholder="Add Link"
-                  oninput="updateItemField('${n.id}','link',this.textContent)"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.link||'')}</div>
+                <div class="item-link-input" contenteditable="${!n.linkTargetId}" data-placeholder="Add Link"
+                  oninput="updateItemField('${eff.id}','link',this.textContent)"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(eff.link||'')}</div>
               </div>
             </div>
           `;
         }
-        return `
-        <div class="item-card">
-          <div>
-            <div class="name">${escapeHtml(n.name)}</div>
-            ${n.note?`<div class="note">${escapeHtml(n.note)}</div>`:''}
-            ${n.link?`<a class="link" href="${escapeHtml(n.link)}" target="_blank" onclick="event.stopPropagation()"><span class="material-icon link-icon">link</span> ${escapeHtml(n.link)}</a>`:''}
+        {
+          const eff = n.linkTargetId ? (findNodeAnywhere(n.linkTargetId)?.node || n) : n;
+          return `
+          <div class="item-card">
+            <div>
+              <div class="name">${escapeHtml(eff.name)}${n.linkTargetId?` <span class="material-icon" style="font-size:14px; color:var(--text-alt);">link</span>`:''}</div>
+              ${eff.note?`<div class="note">${escapeHtml(eff.note)}</div>`:''}
+              ${eff.link?`<a class="link" href="${escapeHtml(eff.link)}" target="_blank" onclick="event.stopPropagation()"><span class="material-icon link-icon">link</span> ${escapeHtml(eff.link)}</a>`:''}
+            </div>
           </div>
-        </div>
-      `;
+        `;
+        }
       }).join('');
     }
   }
@@ -1869,7 +1940,7 @@ function toggleShelfEditing(){
     const {nodes} = resolvePath(shelf, state.path);
     for(let i=nodes.length-1; i>=0; i--){
       const n = nodes[i];
-      if(n.type==='item'){
+      if(n.type==='item' && !n.linkTargetId){
         const blank = !(n.name||'').trim() && !(n.note||'').trim() && !(n.link||'').trim();
         if(blank){
           nodes.splice(i,1);
