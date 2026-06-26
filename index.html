@@ -90,6 +90,10 @@
   }
   .circle-btn:active{ opacity:.6; }
 
+  .account-icon-btn{
+    background:none; border:none; padding:0; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
   .circle-btn-filled{
     width:42px;height:42px;border-radius:50%;
     border:none;
@@ -1571,7 +1575,10 @@ function renderHome(){
     <path d="M98.86.17c-3.39,0-6.04,2.63-6.04,5.98s2.6,5.98,6.04,5.98,5.98-2.57,5.98-5.98S102.27.17,98.86.17ZM98.86,10.71c-2.63,0-4.54-1.92-4.54-4.56s1.95-4.56,4.54-4.56,4.48,1.92,4.48,4.56-1.88,4.56-4.48,4.56Z"/>
   </g>
 </svg></h1>
-        ${isViewer() ? '' : `<button class="pill-btn" onclick="toggleHomeEditing()">${state.homeEditing?'Done':'Edit'}</button>`}
+        <div style="display:flex; align-items:center; gap:8px; margin-right:6px;">
+          ${isViewer() ? '' : `<button class="pill-btn" onclick="toggleHomeEditing()">${state.homeEditing?'Done':'Edit'}</button>`}
+          <button class="account-icon-btn" onclick="switchAccount()" title="Switch account"><span class="material-icon" style="font-size:24px; color:var(--dark-text); font-variation-settings:'FILL' 1;">account_circle</span></button>
+        </div>
       </div>
       <div class="tab-stack">
         <button class="${tab==='favorites'?'active':''}" onclick="state.homeTab='favorites'; render()">Favorites</button>
@@ -2199,6 +2206,19 @@ function unlockSite(){
       Loading your shelves…
     </div>`;
   loadDataFromSupabase();
+}
+
+function switchAccount(){
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  localStorage.removeItem(ROLE_STORAGE_KEY);
+  localStorage.removeItem(TENANT_STORAGE_KEY);
+  DB.shelves = [];
+  state.unlockedPrivateShelves = new Set();
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('passwordGateError').classList.add('hidden');
+  document.getElementById('passwordGate').classList.remove('hidden');
+  document.getElementById('passwordGate').style.display = 'flex';
+  setTimeout(()=>document.getElementById('passwordInput').focus(), 50);
 }
 
 if(localStorage.getItem(AUTH_STORAGE_KEY) === 'true'){
