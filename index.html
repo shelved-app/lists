@@ -513,7 +513,7 @@
   }
   .add-menu button{
     background:none; border:none; cursor:pointer; padding:0;
-    font-family:var(--font-sans); font-size:14px; font-weight:500; line-height:34px;
+    font-family:var(--font-sans); font-size:15px; font-weight:500; line-height:31px;
     color:var(--dark-text); text-align:left;
   }
   .add-menu button:active{ opacity:.6; }
@@ -1862,6 +1862,7 @@ function renderShelf(){
   const parentSubCrumb = trail.length > 1 ? trail[trail.length-1].name : null;
 
   const onBack = () => {
+    state.editing = false;
     if(state.path.length===0){ go('home'); }
     else { state.path.pop(); render(); }
   };
@@ -2041,6 +2042,7 @@ function renderShelf(){
 }
 
 function drillInto(nodeId){
+  state.editing = false;
   state.path.push(nodeId);
   state.search='';
   render();
