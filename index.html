@@ -382,7 +382,7 @@
   .sheet-header-row{
     display:flex; align-items:center; justify-content:space-between;
     padding:22px var(--side) 16px;
-    border-bottom:1px solid rgba(16,5,7,0.18);
+    border-bottom:1px solid var(--dark-text);
     flex-shrink:0;
   }
   .sheet-header-title{
@@ -441,6 +441,10 @@
   .cat-input-row{ display:flex; align-items:flex-end; gap:10px; margin-bottom:0;}
   .cat-input-row.sub-level{ margin-bottom:0; }
   .cat-row-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .add-circle .material-icon,
+  .add-circle-outline .material-icon{
+    display:block; line-height:1;
+  }
   .add-circle{
     width:24px;height:24px;border-radius:50%;border:1.5px solid var(--dark-text);
     color:var(--dark-text); background:transparent; display:flex;align-items:center;justify-content:center;
@@ -505,17 +509,15 @@
   }
   .add-menu button{
     background:none; border:none; cursor:pointer; padding:0;
-    font-family:var(--font-sans); font-size:16pt; font-weight:500; line-height:25pt;
+    font-family:var(--font-sans); font-size:16pt; font-weight:500; line-height:27.5pt;
     color:var(--dark-text); text-align:left;
   }
   .add-menu button:active{ opacity:.6; }
-  .add-menu-close{
-    position:absolute;
-    right:var(--side); bottom:calc(18px + env(safe-area-inset-bottom));
-    width:42px; height:42px; border-radius:50%; flex-shrink:0;
-    border:1.5px solid var(--dark-text); background:transparent;
-    color:var(--dark-text); cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
+  .add-btn-circle .material-icon{ display:block; line-height:1; }
+  .add-btn-circle.is-x{
+    background:transparent;
+    border:1.5px solid var(--dark-text);
+    color:var(--dark-text);
   }
   .search-input{
     flex:1; border:none; outline:none;
@@ -718,7 +720,6 @@
 <div id="addMenuOverlay" class="add-menu-overlay hidden" onclick="closeAddMenu()">
   <div class="add-menu-unit" onclick="event.stopPropagation()">
     <div class="add-menu" id="addMenu"></div>
-    <button class="add-menu-close" onclick="closeAddMenu()"><span class="material-icon" style="font-size:20px;">close</span></button>
   </div>
 </div>
 <div id="app"></div>
@@ -1665,10 +1666,36 @@ function toggleAddMenu(e){
   }
   menu.innerHTML = options;
   overlay.classList.remove('hidden');
+  // Raise the bottom bar above the overlay so the + button stays visible,
+  // and turn the + into an outlined X in place — same element, same spot,
+  // so there is zero positional shift.
+  const btn = document.getElementById('addBtnCircle');
+  if(btn){
+    const r = btn.getBoundingClientRect();
+    btn.style.position = 'fixed';
+    btn.style.left = r.left + 'px';
+    btn.style.top = r.top + 'px';
+    btn.style.width = r.width + 'px';
+    btn.style.height = r.height + 'px';
+    btn.style.zIndex = '60';
+    btn.classList.add('is-x');
+    btn.innerHTML = `<span class="material-icon">close</span>`;
+  }
 }
 
 function closeAddMenu(){
   document.getElementById('addMenuOverlay').classList.add('hidden');
+  const btn = document.getElementById('addBtnCircle');
+  if(btn){
+    btn.style.position = '';
+    btn.style.left = '';
+    btn.style.top = '';
+    btn.style.width = '';
+    btn.style.height = '';
+    btn.style.zIndex = '';
+    btn.classList.remove('is-x');
+    btn.innerHTML = `<span class="material-icon">add</span>`;
+  }
 }
 
 function addMenuPick(kind){
