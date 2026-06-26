@@ -1666,18 +1666,17 @@ function toggleAddMenu(e){
   }
   menu.innerHTML = options;
   overlay.classList.remove('hidden');
-  // Raise the bottom bar above the overlay so the + button stays visible,
-  // and turn the + into an outlined X in place — same element, same spot,
-  // so there is zero positional shift.
+  // Turn the + into an outlined X in place. Raise the whole bottom bar above
+  // the overlay (so the button stays visible) and make the bar transparent so
+  // only the button shows over the white card. The button itself does NOT
+  // move — same element, same spot.
+  const bar = document.querySelector('.bottom-bar');
+  if(bar){ bar.style.zIndex = '60'; bar.style.background = 'transparent'; bar.style.borderTopColor = 'transparent'; bar.style.pointerEvents = 'none'; }
+  const searchEl = document.getElementById('searchInput');
+  if(searchEl) searchEl.style.visibility = 'hidden';
   const btn = document.getElementById('addBtnCircle');
   if(btn){
-    const r = btn.getBoundingClientRect();
-    btn.style.position = 'fixed';
-    btn.style.left = r.left + 'px';
-    btn.style.top = r.top + 'px';
-    btn.style.width = r.width + 'px';
-    btn.style.height = r.height + 'px';
-    btn.style.zIndex = '60';
+    btn.style.pointerEvents = 'auto';
     btn.classList.add('is-x');
     btn.innerHTML = `<span class="material-icon">close</span>`;
   }
@@ -1685,14 +1684,13 @@ function toggleAddMenu(e){
 
 function closeAddMenu(){
   document.getElementById('addMenuOverlay').classList.add('hidden');
+  const bar = document.querySelector('.bottom-bar');
+  if(bar){ bar.style.zIndex = ''; bar.style.background = ''; bar.style.borderTopColor = ''; bar.style.pointerEvents = ''; }
+  const searchEl = document.getElementById('searchInput');
+  if(searchEl) searchEl.style.visibility = '';
   const btn = document.getElementById('addBtnCircle');
   if(btn){
-    btn.style.position = '';
-    btn.style.left = '';
-    btn.style.top = '';
-    btn.style.width = '';
-    btn.style.height = '';
-    btn.style.zIndex = '';
+    btn.style.pointerEvents = '';
     btn.classList.remove('is-x');
     btn.innerHTML = `<span class="material-icon">add</span>`;
   }
@@ -1895,7 +1893,23 @@ function renderShelf(){
       }).join('');
     }
   } else if(isGroupLevel){
-    if(state.editing){
+    if(nodes.length===0){
+      // Empty level: always show the two choice pills (Edit button is hidden
+      // when empty, so this can't rely on edit mode being on). Works at any
+      // depth — "Add Category" at root, "Add Subcategory" when nested.
+      listClass += ' with-side-pad';
+      bodyHtml = `
+        <div class="empty-level-choice">
+          <div class="add-item-row" onclick="addGroupRow()">
+            <span>Add ${atRoot?'Category':'Subcategory'}</span>
+            <button class="add-circle-outline" onclick="event.stopPropagation(); addGroupRow()">+</button>
+          </div>
+          <div class="add-item-row" onclick="quickAddItem()">
+            <span>Add Item</span>
+            <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
+          </div>
+        </div>`;
+    } else if(state.editing){
       listClass += ' with-side-pad';
       // editable rows: underline contenteditable div + minus/plus circles, matching Build a Shelf category editor
       bodyHtml = nodes.map(n=>`
@@ -1910,20 +1924,7 @@ function renderShelf(){
             <button class="add-circle" onclick="addGroupRow()">+</button>
           </div>
         </div>
-      `).join('') + (nodes.length===0 ? `
-        <div class="empty-level-choice">
-          <div class="add-item-row" onclick="addGroupRow()">
-            <span>Add ${atRoot?'Category':'Subcategory'}</span>
-            <button class="add-circle-outline" onclick="event.stopPropagation(); addGroupRow()">+</button>
-          </div>
-          <div class="add-item-row" onclick="quickAddItem()">
-            <span>Add Item</span>
-            <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
-          </div>
-        </div>
-      ` : '');
-    } else if(nodes.length===0){
-      bodyHtml = `<div class="empty-state">Nothing here yet.</div>`;
+      `).join('');
     } else if(atRoot){
       // root: simple serif rows (e.g. cities)
       bodyHtml = nodes.map(n=>{
@@ -2151,6 +2152,7 @@ async function addGroupRow(){
   const row = await dbInsertNode({ shelfId: effectiveShelfId, parentId: effectiveParentId, type:'group', name:'', sortOrder: nodes.length });
   if(!row){ alert('Could not add that — check your Supabase connection.'); return; }
   nodes.push({ id: row.id, type:'group', name:'', children:[] });
+  state.editing = true;
   render();
   requestAnimationFrame(()=>{
     const el = document.querySelector(`[data-cat-name-for="${row.id}"]`);
