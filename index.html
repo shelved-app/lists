@@ -1240,7 +1240,7 @@ function renderLinkPicker(){
     html += items.map(n=>{
       if(n.linkTargetId) return ''; // don't allow linking to something that's already a link
       return `
-        <div class="link-picker-row" onclick="linkPickerConfirm('${n.id}', '${escapeHtml(n.name).replace(/'/g,"\\'")}')">
+        <div class="link-picker-row" onclick="linkPickerConfirm('${n.id}', '${jsAttrString(n.name)}')">
           ${escapeHtml(n.name)} <span class="material-icon">link</span>
         </div>`;
     }).join('');
@@ -1252,7 +1252,7 @@ function renderLinkPicker(){
   if(linkPicker.mode === 'group' && trail.length){
     const current = trail[trail.length-1];
     if(!current.linkTargetId){
-      html += `<button class="link-picker-confirm" onclick="linkPickerConfirm('${current.id}', '${escapeHtml(current.name).replace(/'/g,"\\'")}')">Link to "${escapeHtml(current.name)}"</button>`;
+      html += `<button class="link-picker-confirm" onclick="linkPickerConfirm('${current.id}', '${jsAttrString(current.name)}')">Link to "${escapeHtml(current.name)}"</button>`;
     }
   }
 
@@ -1444,6 +1444,27 @@ function escapeHtml(s){
 
 function jsArrayLiteral(arr){
   return '[' + arr.map(v => typeof v==='string' ? `'${String(v).replace(/'/g,"\\'")}'` : v).join(',') + ']';
+}
+
+// Safely embed arbitrary text (e.g. a user-typed name) as a single-quoted
+// JS string literal inside an onclick="..." HTML attribute. This is NOT
+// the same job as escapeHtml() — that escapes for HTML *display*, but the
+// browser decodes HTML entities (like &#39;) back to literal characters
+// before handing the attribute's contents to the JS parser. So escaping a
+// name with escapeHtml() first and then trying to JS-escape it afterward
+// doesn't work: a literal apostrophe (very common in real names, e.g.
+// "Joe's Pizza") survives HTML-decoding and breaks the JS string,
+// silently throwing a syntax error — which looks exactly like "nothing
+// happens when I tap it". This escapes backslashes/quotes for JS first,
+// then HTML-escapes only the characters that would otherwise break the
+// surrounding double-quoted HTML attribute.
+function jsAttrString(s){
+  return String(s)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function formatShortDate(longStr){
