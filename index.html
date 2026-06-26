@@ -487,6 +487,36 @@
     background:var(--background);
     z-index:5;
   }
+  .add-menu-overlay{
+    position:fixed; inset:0; z-index:50;
+    background:linear-gradient(to bottom, rgba(248,239,224,0) 0%, rgba(248,239,224,0.55) 35%, rgba(248,239,224,0.9) 70%, rgba(248,239,224,0.97) 100%);
+  }
+  .add-menu-unit{
+    position:absolute; right:0; bottom:0;
+    background:var(--white);
+    border-radius:30px 30px 0 30px;
+    padding:18px 0 calc(18px + env(safe-area-inset-bottom)) 26px;
+    box-shadow:0 6px 24px rgba(0,0,0,0.10);
+    display:flex; align-items:flex-end; gap:0;
+  }
+  .add-menu{
+    display:flex; flex-direction:column; align-items:flex-start; gap:0;
+    padding-right:calc(42px + var(--side) + 28px);
+  }
+  .add-menu button{
+    background:none; border:none; cursor:pointer; padding:0;
+    font-family:var(--font-sans); font-size:16pt; font-weight:500; line-height:25pt;
+    color:var(--dark-text); text-align:left;
+  }
+  .add-menu button:active{ opacity:.6; }
+  .add-menu-close{
+    position:absolute;
+    right:var(--side); bottom:calc(18px + env(safe-area-inset-bottom));
+    width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    border:1.5px solid var(--dark-text); background:transparent;
+    color:var(--dark-text); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
   .search-input{
     flex:1; border:none; outline:none;
     background:var(--sand);
@@ -519,11 +549,6 @@
   .search-result-name .count{ color:var(--text-alt); font-weight:400; font-size:14px; }
 
   .empty-level-choice{ margin-top:4px; }
-  .empty-level-or{
-    text-align:center; font-family:var(--font-sans); font-size:13px; font-weight:700;
-    text-transform:uppercase;
-    color:var(--text-alt); margin:14px 0;
-  }
 
   .empty-state{
     text-align:center; color:var(--text-alt); padding:60px var(--side); font-size:15px;
@@ -688,6 +713,12 @@
       <button class="circle-btn" onclick="closeLinkPicker()"><span class="material-icon">close</span></button>
     </div>
     <div class="link-picker-body" id="linkPickerBody"></div>
+  </div>
+</div>
+<div id="addMenuOverlay" class="add-menu-overlay hidden" onclick="closeAddMenu()">
+  <div class="add-menu-unit" onclick="event.stopPropagation()">
+    <div class="add-menu" id="addMenu"></div>
+    <button class="add-menu-close" onclick="closeAddMenu()"><span class="material-icon" style="font-size:20px;">close</span></button>
   </div>
 </div>
 <div id="app"></div>
@@ -1606,6 +1637,47 @@ function openBuildSheet(){
   render();
 }
 
+function toggleAddMenu(e){
+  if(e) e.stopPropagation();
+  if(isViewer()) return;
+  const overlay = document.getElementById('addMenuOverlay');
+  const menu = document.getElementById('addMenu');
+  if(!overlay.classList.contains('hidden')){ closeAddMenu(); return; }
+
+  // Figure out what the current level can accept: a level holds either
+  // categories OR items, never both. If it's empty, the inline pills already
+  // handle adding the first thing, so the menu just offers Build Shelf.
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const hasContent = nodes.length > 0;
+  const levelIsGroups = hasContent && nodes[0].type === 'group';
+  const levelIsItems = hasContent && nodes[0].type === 'item';
+
+  let options = `<button onclick="addMenuPick('shelf')">Build Shelf</button>`;
+  if(levelIsGroups){
+    options += `<button onclick="addMenuPick('category')">Add Category</button>`;
+  } else if(levelIsItems){
+    options += `<button onclick="addMenuPick('item')">Add Item</button>`;
+  } else {
+    // empty level — offer both, mirroring the inline pills
+    options += `<button onclick="addMenuPick('category')">Add ${state.path.length ? 'Subcategory' : 'Category'}</button>`;
+    options += `<button onclick="addMenuPick('item')">Add Item</button>`;
+  }
+  menu.innerHTML = options;
+  overlay.classList.remove('hidden');
+}
+
+function closeAddMenu(){
+  document.getElementById('addMenuOverlay').classList.add('hidden');
+}
+
+function addMenuPick(kind){
+  closeAddMenu();
+  if(kind==='shelf') openBuildSheet();
+  else if(kind==='category'){ state.editing = true; addGroupRow(); }
+  else if(kind==='item'){ quickAddItem(); }
+}
+
 function closeBuildSheet(){
   state.buildClosing = true;
   render();
@@ -1801,7 +1873,7 @@ function renderShelf(){
       // editable rows: underline contenteditable div + minus/plus circles, matching Build a Shelf category editor
       bodyHtml = nodes.map(n=>`
         <div class="cat-input-row${atRoot?'':' sub-level'}" data-node-id="${n.id}">
-          <div class="cat-text-input${atRoot?'':' sub-level'}" contenteditable="true" data-placeholder="${atRoot?'Category':'Subcategory'}"
+          <div class="cat-text-input${atRoot?'':' sub-level'}" contenteditable="true" data-placeholder="${atRoot?'Category':'Subcategory'}" data-cat-name-for="${n.id}"
             oninput="updateGroupName('${n.id}', this.textContent)"
             onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(n.name)}</div>
           <div class="cat-row-actions">
@@ -1813,20 +1885,13 @@ function renderShelf(){
         </div>
       `).join('') + (nodes.length===0 ? `
         <div class="empty-level-choice">
-          <div class="cat-input-row${atRoot?'':' sub-level'}">
-            <div class="cat-text-input${atRoot?'':' sub-level'}" contenteditable="true" data-placeholder="${atRoot?'Category':'Subcategory'}"
-              onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}"></div>
-            <div class="cat-row-actions">
-              <button class="add-circle" onclick="addGroupRow()">+</button>
-            </div>
+          <div class="add-item-row" onclick="addGroupRow()">
+            <span>Add ${atRoot?'Category':'Subcategory'}</span>
+            <button class="add-circle-outline" onclick="event.stopPropagation(); addGroupRow()">+</button>
           </div>
-          <div class="empty-level-or">or</div>
           <div class="add-item-row" onclick="quickAddItem()">
             <span>Add Item</span>
-            <div class="add-item-row-actions">
-              <button class="add-circle-outline" onclick="event.stopPropagation(); startLinkForNewItem()" title="Link to an existing item"><span class="material-icon" style="font-size:13px;">link</span></button>
-              <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
-            </div>
+            <button class="add-circle-outline" onclick="event.stopPropagation(); quickAddItem()">+</button>
           </div>
         </div>
       ` : '');
@@ -1912,7 +1977,7 @@ function renderShelf(){
       </div>
       <!-- Date intentionally hidden from UI; shelf.updated is still stored and formatted via formatShortDate() if needed later -->
       <span class="title-center hidden"></span>
-      ${isViewer() ? '' : `<button class="pill-btn" onclick="toggleShelfEditing()">${state.editing?'Done':'Edit'}</button>`}
+      ${(isViewer() || nodes.length===0) ? '' : `<button class="pill-btn" onclick="toggleShelfEditing()">${state.editing?'Done':'Edit'}</button>`}
     </div>
     <div class="crumb-row">
       <div class="crumb-title">
@@ -1936,7 +2001,7 @@ function renderShelf(){
     <div id="shelfListArea" class="${listClass}${justToggledEdit?' rows-slide-container':''}" style="padding-top:${parentCrumb ? '14' : '22'}px;">${bodyHtml}</div>
     <div class="bottom-bar">
       <input id="searchInput" class="search-input" placeholder="Search" value="${escapeHtml(state.search)}" oninput="state.search=this.value; render()">
-      ${isViewer() ? '' : `<button class="add-btn-circle" onclick="openBuildSheet()">+</button>`}
+      ${isViewer() ? '' : `<button id="addBtnCircle" class="add-btn-circle" onclick="toggleAddMenu(event)"><span class="material-icon" style="font-size:20px;">add</span></button>`}
     </div>
   `;
 }
@@ -2060,6 +2125,10 @@ async function addGroupRow(){
   if(!row){ alert('Could not add that — check your Supabase connection.'); return; }
   nodes.push({ id: row.id, type:'group', name:'', children:[] });
   render();
+  requestAnimationFrame(()=>{
+    const el = document.querySelector(`[data-cat-name-for="${row.id}"]`);
+    if(el) el.focus();
+  });
 }
 
 function deleteGroupRow(nodeId){
