@@ -419,7 +419,9 @@
     display:flex; align-items:center; justify-content:center;
     overflow:hidden;
     background:var(--white);
+    border:1px solid var(--text-alt);
   }
+  .custom-swatch.selected{ border-color:var(--dark-text); }
   .custom-swatch .material-icon{
     font-size:14px; color:var(--dark-text);
     pointer-events:none;
@@ -1731,7 +1733,8 @@ function buildSheetInnerHtml(){
     <label class="swatch custom-swatch ${isCustom?'selected':''}">
       <span class="material-icon">colorize</span>
       <input type="color" value="${d.customHex}"
-        oninput="state.buildDraft.customHex=this.value; state.buildDraft.colorIdx='custom'; render()">
+        oninput="state.buildDraft.customHex=this.value; state.buildDraft.colorIdx='custom';"
+        onchange="state.buildDraft.customHex=this.value; state.buildDraft.colorIdx='custom'; render()">
     </label>
   `;
 
