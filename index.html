@@ -1353,13 +1353,33 @@ function startLinkForNode(nodeId){
   const {nodes} = resolvePath(shelf, state.path);
   const node = nodes.find(n=>String(n.id)===String(nodeId));
   if(!node) return;
-  if(!node.linkTargetId && node.children && node.children.length>0){
+  // Already linked? Offer to unlink instead of re-linking.
+  if(node.linkTargetId){
+    const ok = confirm(`Unlink "${node.name||'this category'}"? It will stop mirroring the linked category. The actual content stays where it lives — this just disconnects the link here.`);
+    if(ok) unlinkNode(nodeId);
+    return;
+  }
+  if(node.children && node.children.length>0){
     const ok = confirm(`"${node.name||'This category'}" already has content in it. Linking it to another category will hide its current content here (it won't be deleted, just no longer shown through this category). Continue?`);
     if(!ok) return;
   }
   openLinkPicker((targetId, targetName, targetShelfId)=>{
     applyLinkToNode(nodeId, targetId, targetShelfId);
   });
+}
+
+async function unlinkNode(nodeId){
+  const shelf = findShelf(state.shelfId);
+  const {nodes} = resolvePath(shelf, state.path);
+  const node = nodes.find(n=>String(n.id)===String(nodeId));
+  if(!node) return;
+  await dbUpdateNode(nodeId, { linked_node_id: null });
+  node.linkTargetId = null;
+  node.linkTargetShelfId = null;
+  // A previously-linked group was sharing the target's children array; give it
+  // its own empty array back so it no longer mirrors the target.
+  if(node.type === 'group') node.children = [];
+  render();
 }
 
 async function applyLinkToNode(nodeId, targetId, targetShelfId){
