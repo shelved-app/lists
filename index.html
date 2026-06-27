@@ -349,6 +349,16 @@
     cursor:pointer; flex-shrink:0;
   }
   .home-edit-icon-btn .material-icon{ font-size:20px; }
+  .home-edit-color-btn{
+    width:42px; height:42px; border-radius:50%;
+    border:1.5px solid var(--dark-text);
+    flex-shrink:0; cursor:pointer; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .home-edit-color-btn input[type="color"]{
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    opacity:0; cursor:pointer; border:none; padding:0;
+  }
   .drag-handle{ cursor:grab; touch-action:none; }
   .drag-handle.drag-disabled{ opacity:.35; cursor:not-allowed; }
   .shelf-card.dragging, .cat-input-row.dragging, .item-card.dragging{
@@ -1436,6 +1446,41 @@ function activeColorHex(d){
   return d.colorIdx==='custom' ? d.customHex : COLORS[d.colorIdx].hex;
 }
 
+// iOS Safari fires the color input's events while the native picker is still
+// open; calling render() there would rebuild (and thus close) the picker.
+// So we update state and the live previews directly in the DOM instead of
+// re-rendering. A full render happens naturally on the next real interaction.
+function onCustomColorInput(hex){
+  state.buildDraft.customHex = hex;
+  state.buildDraft.colorIdx = 'custom';
+  // Mark the custom swatch as the selected one.
+  document.querySelectorAll('.swatch').forEach(el=>el.classList.remove('selected'));
+  const cs = document.getElementById('customSwatch');
+  if(cs) cs.classList.add('selected');
+  // Live-preview the color on the shelf-name input background.
+  const nameEl = document.getElementById('shelfNameInput');
+  if(nameEl){
+    nameEl.style.background = hex;
+    nameEl.style.color = textColorFor(hex);
+  }
+}
+
+const shelfColorSaveTimers = {};
+function onShelfColorInput(shelfId, hex){
+  const shelf = findShelf(shelfId);
+  if(!shelf) return;
+  shelf.color = hex;
+  // Update the swatch button + badge colors in place (no full re-render, so
+  // the native iOS color picker isn't destroyed/closed mid-adjustment).
+  const btn = document.querySelector('.home-edit-color-btn');
+  if(btn) btn.style.background = hex;
+  // Debounce the DB write so dragging through colors doesn't spam Supabase.
+  clearTimeout(shelfColorSaveTimers[shelfId]);
+  shelfColorSaveTimers[shelfId] = setTimeout(()=>{
+    dbUpdateShelf(shelfId, { color: hex });
+  }, 400);
+}
+
 function resolvePath(shelf, path){
   let nodes = shelf.nodes;
   let trail = [];
@@ -1730,11 +1775,10 @@ function buildSheetInnerHtml(){
   const swatches = COLORS.map((c,i)=>`
     <div class="swatch ${i===d.colorIdx?'selected':''}" style="background:${c.hex}" onclick="state.buildDraft.colorIdx=${i}; render()"></div>
   `).join('') + `
-    <label class="swatch custom-swatch ${isCustom?'selected':''}">
+    <label class="swatch custom-swatch ${isCustom?'selected':''}" id="customSwatch">
       <span class="material-icon">colorize</span>
       <input type="color" value="${d.customHex}"
-        oninput="state.buildDraft.customHex=this.value; state.buildDraft.colorIdx='custom';"
-        onchange="state.buildDraft.customHex=this.value; state.buildDraft.colorIdx='custom'; render()">
+        oninput="onCustomColorInput(this.value)">
     </label>
   `;
 
@@ -1761,7 +1805,7 @@ function buildSheetInnerHtml(){
         <div class="swatches">${swatches}</div>
 
         <div class="form-label">What is your shelf called?</div>
-        <input class="name-input" placeholder="Shelf Name" value="${escapeHtml(d.name)}"
+        <input id="shelfNameInput" class="name-input" placeholder="Shelf Name" value="${escapeHtml(d.name)}"
           oninput="state.buildDraft.name=this.value"
           style="background:${activeHex}; color:${textColorFor(activeHex)};">
 
@@ -2025,6 +2069,9 @@ function renderShelf(){
         ${escapeHtml(shelf.name)}
         ${state.editing ? `
           <span class="home-edit-actions">
+            <label class="home-edit-color-btn" style="background:${shelf.color};">
+              <input type="color" value="${shelf.color}" oninput="onShelfColorInput('${shelf.id}', this.value)">
+            </label>
             <button class="home-edit-icon-btn" style="color:var(--dark-text);" onclick="toggleShelfFavorite('${shelf.id}'); render();">
               <span class="material-icon" style="font-size:17px;${shelf.favorite?` font-variation-settings:'FILL' 1;`:''}">star</span>
             </button>
