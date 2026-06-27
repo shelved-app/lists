@@ -1762,11 +1762,13 @@ function buildSheetInnerHtml(){
           oninput="state.buildDraft.name=this.value"
           style="background:${activeHex}; color:${textColorFor(activeHex)};">
 
+        ${canUsePrivacy() ? `
         <div class="form-label">Should this shelf be private?</div>
         <div class="privacy-toggle">
           <button class="privacy-btn ${!d.isPrivate?'selected':''}" onclick="state.buildDraft.isPrivate=false; render()">Public</button>
           <button class="privacy-btn ${d.isPrivate?'selected':''}" onclick="state.buildDraft.isPrivate=true; render()">Private</button>
         </div>
+        ` : ''}
 
         <div class="form-label">What categories would you like to add?</div>
         ${catRows}
@@ -1819,13 +1821,14 @@ async function saveNewShelf(){
   const d = state.buildDraft;
   if(!d.name.trim()){ alert('Give your shelf a name first.'); return; }
   const cats = d.categories.filter(c=>c.trim());
+  const makePrivate = canUsePrivacy() ? d.isPrivate : false; // only owner can create private shelves
 
   state.showBuildSheet = false;
   state.buildClosing = false;
   state.buildJustOpened = false;
 
   const shelfRow = await dbInsertShelf({
-    name: d.name.trim(), color: activeColorHex(d), favorite:false, private:d.isPrivate,
+    name: d.name.trim(), color: activeColorHex(d), favorite:false, private:makePrivate,
   });
   if(!shelfRow){ alert('Could not save the shelf — check your Supabase connection.'); return; }
 
@@ -1837,12 +1840,12 @@ async function saveNewShelf(){
 
   const id = shelfRow.id;
   DB.shelves.unshift({
-    id, name:d.name.trim(), color: activeColorHex(d), favorite:false, private:d.isPrivate,
+    id, name:d.name.trim(), color: activeColorHex(d), favorite:false, private:makePrivate,
     updated: shelfRow.updated_at,
     nodes
   });
   state.buildDraft = { colorIdx:0, customHex:'#A89F91', name:'', isPrivate:false, categories:[''] };
-  if(d.isPrivate){
+  if(makePrivate){
     openShelf(id);
   } else {
     go('shelf',{shelfId:id, path:[]});
@@ -2292,6 +2295,7 @@ const TENANTS = {
   'guest':    { tenantId:'owner',   role:'viewer' }, // <-- view-only access to YOUR shelves
   'aimlist':  { tenantId:'amy',     role:'owner'  }, // <-- Amy, with her own separate shelves
   'Aubrey':   { tenantId:'aubrey',  role:'owner'  }, // <-- Aubrey, with her own separate shelves
+  'alelist':  { tenantId:'ale',     role:'owner'  }, // <-- Ale, with her own separate shelves
 };
 const PRIVATE_SHELF_PASSWORD = 'secrets'; // <-- separate password for shelves marked Private (shared across everyone for now)
 const AUTH_STORAGE_KEY = 'shelved_unlocked';
@@ -2301,6 +2305,7 @@ const TENANT_STORAGE_KEY = 'shelved_tenant';
 let userRole = localStorage.getItem(ROLE_STORAGE_KEY) || 'owner';
 let currentTenantId = localStorage.getItem(TENANT_STORAGE_KEY) || 'owner';
 function isViewer(){ return userRole === 'viewer'; }
+function canUsePrivacy(){ return currentTenantId === 'owner'; } // only the original owner gets public/private shelves
 
 function checkSitePassword(){
   const input = document.getElementById('passwordInput');
